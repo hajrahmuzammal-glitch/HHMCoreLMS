@@ -1,0 +1,106 @@
+﻿
+using HHMCore.Core.Entities;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
+
+namespace HHMCore.Data.Context
+{
+    public class AppDbContext : IdentityDbContext<AppUser>
+    {
+        public AppDbContext(DbContextOptions<AppDbContext> options) : base(options)
+        {
+        }
+
+        public DbSet<Department> Departments { get; set; }
+        public DbSet<Student> Students { get; set; }
+        public DbSet<Teacher> Teachers { get; set; }
+        public DbSet<Course> Courses { get; set; }
+        public DbSet<Semester> Semesters { get; set; }
+        public DbSet<CourseAssignment> CourseAssignments { get; set; }
+        public DbSet<Enrollment> Enrollments { get; set; }
+        public DbSet<Attendance> Attendances { get; set; }
+        public DbSet<Assignment> Assignments { get; set; }
+        public DbSet<AssignmentSubmission> AssignmentSubmissions { get; set; }
+        public DbSet<Quiz> Quizzes { get; set; }
+        public DbSet<QuizResult> QuizResults { get; set; }
+        public DbSet<FeeRecord> FeeRecords { get; set; }
+
+        protected override void OnModelCreating(ModelBuilder builder)
+        {
+            base.OnModelCreating(builder);
+
+            builder.Entity<Department>().HasQueryFilter(x => !x.IsDeleted);
+            builder.Entity<Student>().HasQueryFilter(x => !x.IsDeleted);
+            builder.Entity<Teacher>().HasQueryFilter(x => !x.IsDeleted);
+            builder.Entity<Course>().HasQueryFilter(x => !x.IsDeleted);
+            builder.Entity<Semester>().HasQueryFilter(x => !x.IsDeleted);
+            builder.Entity<CourseAssignment>().HasQueryFilter(x => !x.IsDeleted);
+            builder.Entity<Enrollment>().HasQueryFilter(x => !x.IsDeleted);
+            builder.Entity<Attendance>().HasQueryFilter(x => !x.IsDeleted);
+            builder.Entity<Assignment>().HasQueryFilter(x => !x.IsDeleted);
+            builder.Entity<AssignmentSubmission>().HasQueryFilter(x => !x.IsDeleted);
+            builder.Entity<Quiz>().HasQueryFilter(x => !x.IsDeleted);
+            builder.Entity<QuizResult>().HasQueryFilter(x => !x.IsDeleted);
+            builder.Entity<FeeRecord>().HasQueryFilter(x => !x.IsDeleted);
+
+            builder.Entity<Teacher>()
+                .Property(x => x.Salary)
+                .HasColumnType("decimal(18,2)");
+
+            builder.Entity<FeeRecord>()
+                .Property(x => x.Amount)
+                .HasColumnType("decimal(18,2)");
+
+            builder.Entity<FeeRecord>()
+                .Property(x => x.LateFine)
+                .HasColumnType("decimal(18,2)");
+
+            builder.Entity<FeeRecord>()
+                .Property(x => x.Discount)
+                .HasColumnType("decimal(18,2)");
+
+            builder.Entity<CourseAssignment>()
+                .HasOne(x => x.Course)
+                .WithMany(x => x.CourseAssignments)
+                .HasForeignKey(x => x.CourseId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            builder.Entity<CourseAssignment>()
+                .HasOne(x => x.Teacher)
+                .WithMany(x => x.CourseAssignments)
+                .HasForeignKey(x => x.TeacherId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            builder.Entity<Enrollment>()
+                .HasOne(x => x.Course)
+                .WithMany(x => x.Enrollments)
+                .HasForeignKey(x => x.CourseId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            builder.Entity<Enrollment>()
+                .HasOne(x => x.Semester)
+                .WithMany(x => x.Enrollments)
+                .HasForeignKey(x => x.SemesterId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            builder.Entity<Attendance>()
+                .HasOne(x => x.CourseAssignment)
+                .WithMany(x => x.Attendances)
+                .HasForeignKey(x => x.CourseAssignmentId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            builder.Entity<AssignmentSubmission>()
+                .HasOne(x => x.Assignment)
+                .WithMany(x => x.Submissions)
+                .HasForeignKey(x => x.AssignmentId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            builder.Entity<QuizResult>()
+                .HasOne(x => x.Quiz)
+                .WithMany(x => x.QuizResults)
+                .HasForeignKey(x => x.QuizId)
+                .OnDelete(DeleteBehavior.Restrict);
+        }
+    }
+}

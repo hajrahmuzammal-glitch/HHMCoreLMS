@@ -1,0 +1,34 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.12.35707.178
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HHMCore.WebAPI", "HHMCore.WebAPI\HHMCore.WebAPI.csproj", "{80ACE73C-CCFA-48B7-91B6-65E1E5DA5D04}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HHMCore.Core", "HHMCore.Core\HHMCore.Core.csproj", "{DA711531-5850-44FF-841E-D21AADCE29EA}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HHMCore.Data", "HHMCore.Data\HHMCore.Data.csproj", "{04BB9656-1EB1-4113-AAEE-655BE484EA3B}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{80ACE73C-CCFA-48B7-91B6-65E1E5DA5D04}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{80ACE73C-CCFA-48B7-91B6-65E1E5DA5D04}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{80ACE73C-CCFA-48B7-91B6-65E1E5DA5D04}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{80ACE73C-CCFA-48B7-91B6-65E1E5DA5D04}.Release|Any CPU.Build.0 = Release|Any CPU
+		{DA711531-5850-44FF-841E-D21AADCE29EA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DA711531-5850-44FF-841E-D21AADCE29EA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DA711531-5850-44FF-841E-D21AADCE29EA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DA711531-5850-44FF-841E-D21AADCE29EA}.Release|Any CPU.Build.0 = Release|Any CPU
+		{04BB9656-1EB1-4113-AAEE-655BE484EA3B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{04BB9656-1EB1-4113-AAEE-655BE484EA3B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{04BB9656-1EB1-4113-AAEE-655BE484EA3B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{04BB9656-1EB1-4113-AAEE-655BE484EA3B}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal
