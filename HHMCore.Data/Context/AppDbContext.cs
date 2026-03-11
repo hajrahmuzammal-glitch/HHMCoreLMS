@@ -84,11 +84,31 @@ namespace HHMCore.Data.Context
                 .HasForeignKey(x => x.SemesterId)
                 .OnDelete(DeleteBehavior.Restrict);
 
+            builder.Entity<Enrollment>()
+                .Property(e => e.GradePoints)
+                .HasColumnType("decimal(18,2)");
+
+            builder.Entity<Enrollment>()
+                .Property(e => e.MarksObtained)
+                .HasColumnType("decimal(18,2)");
+
+            builder.Entity<Enrollment>()
+                .Property(e => e.TotalMarks)
+                .HasColumnType("decimal(18,2)");
+
             builder.Entity<Attendance>()
                 .HasOne(x => x.CourseAssignment)
                 .WithMany(x => x.Attendances)
                 .HasForeignKey(x => x.CourseAssignmentId)
                 .OnDelete(DeleteBehavior.Restrict);
+
+            builder.Entity<Assignment>()
+                .Property(a => a.TotalMarks)
+                .HasColumnType("decimal(18,2)");
+
+            builder.Entity<AssignmentSubmission>()
+                 .Property(a => a.MarksObtained)
+                 .HasColumnType("decimal(18,2)");
 
             builder.Entity<AssignmentSubmission>()
                 .HasOne(x => x.Assignment)
@@ -96,11 +116,21 @@ namespace HHMCore.Data.Context
                 .HasForeignKey(x => x.AssignmentId)
                 .OnDelete(DeleteBehavior.Restrict);
 
+            builder.Entity<Quiz>()
+                 .Property(q => q.TotalMarks)
+                 .HasColumnType("decimal(18,2)");
+
+       
+            builder.Entity<QuizResult>()
+                .Property(q => q.MarksObtained)
+                .HasColumnType("decimal(18,2)");
+
             builder.Entity<QuizResult>()
                 .HasOne(x => x.Quiz)
                 .WithMany(x => x.QuizResults)
                 .HasForeignKey(x => x.QuizId)
                 .OnDelete(DeleteBehavior.Restrict);
+
         }
     }
 }

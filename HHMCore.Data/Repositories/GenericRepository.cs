@@ -37,16 +37,6 @@ namespace HHMCore.Data.Repositories
             return await _dbSet.Where(predicate).ToListAsync();
         }
 
-        public async Task<T?> FirstOrDefaultAsync(Expression<Func<T, bool>> predicate)
-        {
-            return await _dbSet.FirstOrDefaultAsync(predicate);
-        }
-
-        public async Task<bool> AnyAsync(Expression<Func<T, bool>> predicate)
-        {
-            return await _dbSet.AnyAsync(predicate);
-        }
-
         public async Task AddAsync(T entity)
         {
             await _dbSet.AddAsync(entity);
@@ -63,14 +53,14 @@ namespace HHMCore.Data.Repositories
             Update(entity);
         }
 
-        public Task<T?> FindOneAsync(Expression<Func<T, bool>> predicate)
+        public async  Task<T?> FindOneAsync(Expression<Func<T, bool>> predicate)
         {
-            throw new NotImplementedException();
+            return await _dbSet.FirstOrDefaultAsync(predicate);
         }
 
-        public Task<bool> ExistsAsync(Expression<Func<T, bool>> predicate)
+        public async Task<bool> ExistsAsync(Expression<Func<T, bool>> predicate)
         {
-            throw new NotImplementedException();
+            return await _dbSet.AnyAsync(predicate);
         }
         public async Task<T?> GetByIdWithIncludesAsync(Guid id, params Expression<Func<T, object>>[] includes)
         {

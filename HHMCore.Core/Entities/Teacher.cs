@@ -14,6 +14,8 @@ namespace HHMCore.Core.Entities
 
         public string FullName { get; set; } = string.Empty;
         public string EmployeeId { get; set; } = string.Empty;
+        public string Cnic { get; set; } = string.Empty;
+        public DateTime DateOfBirth { get; set; }
         public string PhoneNumber { get; set; } = string.Empty;
         public string? Address { get; set; }
         public string Designation { get; set; } = string.Empty;
