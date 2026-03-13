@@ -28,6 +28,7 @@ namespace HHMCore.Data.Repositories
         private IGenericRepository<Quiz>? _quizzes;
         private IGenericRepository<QuizResult>? _quizResults;
         private IGenericRepository<FeeRecord>? _feeRecords;
+        private IGenericRepository<Designation>? _designations;
 
         public UnitOfWork(AppDbContext context)
         {
@@ -73,6 +74,9 @@ namespace HHMCore.Data.Repositories
 
         public IGenericRepository<FeeRecord> FeeRecords =>
             _feeRecords ??= new GenericRepository<FeeRecord>(_context);
+
+        public IGenericRepository<Designation> Designations =>
+          _designations ??= new GenericRepository<Designation>(_context);
 
         // One call saves ALL pending changes across ALL repositories
         public async Task<int> SaveChangesAsync()

@@ -31,10 +31,12 @@ namespace HHMCore.Core.Validators.Teacher
                 .NotEmpty()
                 .Matches(@"^\d{13}$")
                 .WithMessage("CNIC must be exactly 13 digits with no dashes.");
-            
-            RuleFor(x => x.Designation)
-                .NotEmpty().WithMessage("Designation is required.")
-                .MaximumLength(100).WithMessage("Designation cannot exceed 100 characters.");
+
+            RuleFor(x => x.DesignationId)
+            .Must(id => id != Guid.Empty).WithMessage("A valid Designation ID is required.");
+
+            RuleFor(x => x.Gender)
+                .IsInEnum().WithMessage("Gender must be Male, Female, or Other.");
 
             RuleFor(x => x.Salary)
                 .GreaterThan(0).WithMessage("Salary must be greater than zero.");

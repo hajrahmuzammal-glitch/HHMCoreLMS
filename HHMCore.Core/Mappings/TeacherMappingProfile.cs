@@ -21,7 +21,11 @@ namespace HHMCore.Core.Mappings
                 .ForMember(dest => dest.UserId,
                     opt => opt.MapFrom(src => src.UserId))
                 .ForMember(dest => dest.DepartmentName,
-                    opt => opt.MapFrom(src => src.Department != null ? src.Department.Name : string.Empty));
+                    opt => opt.MapFrom(src => src.Department != null ? src.Department.Name : string.Empty))
+                .ForMember(dest => dest.DesignationTitle,
+                    opt => opt.MapFrom(src => src.Designation != null ? src.Designation.Title : string.Empty))
+               .ForMember(dest => dest.Gender,
+                    opt => opt.MapFrom(src => src.Gender.ToString()));
         }
     }
 }

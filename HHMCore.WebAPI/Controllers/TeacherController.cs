@@ -35,7 +35,7 @@ namespace HHMCore.WebAPI.Controllers
         }
 
         [HttpGet("{id:guid}")]
-        [Authorize(Roles = "Admin,Teacher")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> GetById(Guid id)
         {
             var result = await _teacherService.GetByIdAsync(id);
@@ -43,14 +43,11 @@ namespace HHMCore.WebAPI.Controllers
             if (!result.Success)
                 return NotFound(result);
 
-            if (IsTeacher() && result.Data != null && result.Data.UserId != GetCurrentUserId())
-                return StatusCode(403, new { success = false, message = "You are not authorized to view this profile." });
-
             return Ok(result);
         }
 
         [HttpGet("department/{departmentId:guid}")]
-        [Authorize(Roles = "Admin,Teacher")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> GetByDepartment(Guid departmentId)
         {
             var result = await _teacherService.GetByDepartmentAsync(departmentId);
@@ -58,7 +55,7 @@ namespace HHMCore.WebAPI.Controllers
         }
 
         [HttpPut("{id:guid}")]
-        [Authorize(Roles = "Admin,Teacher")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Update(Guid id, [FromBody] UpdateTeacherDto dto)
         {
             if (id != dto.Id)
@@ -67,9 +64,6 @@ namespace HHMCore.WebAPI.Controllers
             var existing = await _teacherService.GetByIdAsync(id);
             if (!existing.Success)
                 return NotFound(existing);
-
-            if (IsTeacher() && existing.Data != null && existing.Data.UserId != GetCurrentUserId())
-                return StatusCode(403, new { success = false, message = "You are not authorized to update this profile." });
 
             var result = await _teacherService.UpdateAsync(dto, GetCurrentUserEmail());
             return result.Success ? Ok(result) : BadRequest(result);
@@ -83,13 +77,31 @@ namespace HHMCore.WebAPI.Controllers
             return result.Success ? Ok(result) : NotFound(result);
         }
 
+        [HttpGet("me")]
+        [Authorize(Roles = "Teacher")]
+        public async Task<IActionResult> GetMe()
+        {
+            var result = await _teacherService.GetMeAsync(GetCurrentUserId());
+            return result.Success ? Ok(result) : NotFound(result);
+        }
+
+        [HttpPut("me/profile")]
+        [Authorize(Roles = "Teacher")]
+        public async Task<IActionResult> UpdateMyProfile([FromBody] UpdateTeacherProfileDto dto)
+        {
+            var userId = GetCurrentUserId();               
+            if (string.IsNullOrEmpty(userId))             
+                return Unauthorized();
+
+            var result = await _teacherService.UpdateMyProfileAsync(userId, dto);
+            return result.Success ? Ok(result) : BadRequest(result);
+        }
+
         private string GetCurrentUserId() =>
             User.FindFirstValue(ClaimTypes.NameIdentifier) ?? string.Empty;
 
         private string GetCurrentUserEmail() =>
             User.FindFirstValue(ClaimTypes.Email) ?? "system";
 
-        private bool IsTeacher() =>
-            User.FindFirstValue(ClaimTypes.Role) == "Teacher";
     }
 }

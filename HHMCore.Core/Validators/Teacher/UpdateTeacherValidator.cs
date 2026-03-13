@@ -16,18 +16,25 @@ namespace HHMCore.Core.Validators.Teacher
                 .Must(id => id != Guid.Empty).WithMessage("A valid Teacher ID is required.");
 
             RuleFor(x => x.FullName)
-                .NotEmpty().WithMessage("Full name is required.")
-                .MaximumLength(100).WithMessage("Full name cannot exceed 100 characters.");
+             .NotEmpty().WithMessage("Full name is required.")
+             .MaximumLength(100).WithMessage("Full name cannot exceed 100 characters.")
+             .When(x => x.FullName is not null);
 
-            RuleFor(x => x.Designation)
-                .NotEmpty().WithMessage("Designation is required.")
-                .MaximumLength(100).WithMessage("Designation cannot exceed 100 characters.");
+            RuleFor(x => x.DesignationId)
+            .Must(id => id != Guid.Empty).WithMessage("A valid Designation ID is required.")
+            .When(x => x.DesignationId.HasValue);
+
+            RuleFor(x => x.Gender)
+                .IsInEnum().WithMessage("Gender must be Male, Female, or Other.")
+                .When(x => x.Gender.HasValue);
 
             RuleFor(x => x.Salary)
-                .GreaterThan(0).WithMessage("Salary must be greater than zero.");
+                .GreaterThan(0).WithMessage("Salary must be greater than zero.")
+                .When(x => x.Salary.HasValue);
 
             RuleFor(x => x.DepartmentId)
-                .Must(id => id != Guid.Empty).WithMessage("A valid Department ID is required.");
+                .Must(id => id != Guid.Empty).WithMessage("A valid Department ID is required.")
+                .When(x => x.DepartmentId.HasValue);
 
             RuleFor(x => x.PhoneNumber)
                 .MaximumLength(20).WithMessage("Phone number cannot exceed 20 characters.")
@@ -38,8 +45,9 @@ namespace HHMCore.Core.Validators.Teacher
                 .When(x => x.Address != null);
 
             RuleFor(x => x.DateOfBirth)
-                .LessThan(DateTime.UtcNow).WithMessage("Date of birth must be in the past.")
-                .When(x => x.DateOfBirth.HasValue);
+                .NotEmpty().WithMessage("Date of birth is required.")
+                .Must(dob => dob >= new DateTime(1940, 1, 1) && dob <= DateTime.UtcNow.AddYears(-22))
+                .WithMessage("Date of birth must be between 1940 and 22 years ago.");
         }
     }
 }

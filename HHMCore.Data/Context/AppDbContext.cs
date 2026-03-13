@@ -25,6 +25,7 @@ namespace HHMCore.Data.Context
         public DbSet<Quiz> Quizzes { get; set; }
         public DbSet<QuizResult> QuizResults { get; set; }
         public DbSet<FeeRecord> FeeRecords { get; set; }
+        public DbSet<Designation> Designations { get; set; }
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
@@ -43,6 +44,7 @@ namespace HHMCore.Data.Context
             builder.Entity<Quiz>().HasQueryFilter(x => !x.IsDeleted);
             builder.Entity<QuizResult>().HasQueryFilter(x => !x.IsDeleted);
             builder.Entity<FeeRecord>().HasQueryFilter(x => !x.IsDeleted);
+            builder.Entity<Designation>().HasQueryFilter(x => !x.IsDeleted);
 
             builder.Entity<Teacher>()
                 .Property(x => x.Salary)
@@ -129,6 +131,13 @@ namespace HHMCore.Data.Context
                 .HasOne(x => x.Quiz)
                 .WithMany(x => x.QuizResults)
                 .HasForeignKey(x => x.QuizId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+
+            builder.Entity<Teacher>()
+                .HasOne(x => x.Designation)
+                .WithMany(x => x.Teachers)
+                .HasForeignKey(x => x.DesignationId)
                 .OnDelete(DeleteBehavior.Restrict);
 
         }

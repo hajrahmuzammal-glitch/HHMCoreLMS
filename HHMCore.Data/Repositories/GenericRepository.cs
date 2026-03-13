@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using HHMCore.Core.Entities; 
+using HHMCore.Core.Entities;
 using HHMCore.Core.Interfaces;
 using HHMCore.Data.Context;
 using Microsoft.EntityFrameworkCore;
@@ -53,7 +53,7 @@ namespace HHMCore.Data.Repositories
             Update(entity);
         }
 
-        public async  Task<T?> FindOneAsync(Expression<Func<T, bool>> predicate)
+        public async Task<T?> FindOneAsync(Expression<Func<T, bool>> predicate)
         {
             return await _dbSet.FirstOrDefaultAsync(predicate);
         }
@@ -90,6 +90,13 @@ namespace HHMCore.Data.Repositories
                 query = query.Include(include);
 
             return await query.Where(predicate).ToListAsync();
+        }
+        public async Task<T?> FindOneWithIncludesAsync(Expression<Func<T, bool>> predicate,params Expression<Func<T, object>>[] includes)
+        {
+            IQueryable<T> query = _context.Set<T>();
+            foreach (var include in includes)
+                query = query.Include(include);
+            return await query.FirstOrDefaultAsync(predicate);
         }
     }
 }

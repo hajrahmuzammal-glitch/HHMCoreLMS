@@ -150,5 +150,17 @@ namespace HHMCore.Core.Services
 
             return ApiResponse.Ok("Student deleted successfully.");
         }
+
+        public async Task<ApiResponse<StudentResponseDto>> GetMeAsync(string userId)
+        {
+            var student = await _unitOfWork.Students
+                .FindOneWithIncludesAsync(s => s.UserId == userId, s => s.User, s => s.Department);
+
+            if (student is null)
+                return ApiResponse<StudentResponseDto>.Fail("Student profile not found.");
+
+            var response = _mapper.Map<StudentResponseDto>(student);
+            return ApiResponse<StudentResponseDto>.Ok(response, "Profile retrieved successfully.");
+        }
     }
 }

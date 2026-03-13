@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Identity;
+﻿using HHMCore.Core.Enums;
+using Microsoft.AspNetCore.Identity;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -11,14 +12,15 @@ namespace HHMCore.Core.Entities
     {
         public string UserId { get; set; } = string.Empty;
         public AppUser User { get; set; } = null!;
-
         public string FullName { get; set; } = string.Empty;
         public string EmployeeId { get; set; } = string.Empty;
         public string Cnic { get; set; } = string.Empty;
         public DateTime DateOfBirth { get; set; }
         public string PhoneNumber { get; set; } = string.Empty;
         public string? Address { get; set; }
-        public string Designation { get; set; } = string.Empty;
+        public Guid DesignationId { get; set; }
+        public Designation Designation { get; set; } = null!;
+        public Gender Gender { get; set; }
         public string Qualification { get; set; } = string.Empty;
         public DateTime JoiningDate { get; set; } = DateTime.UtcNow;
         public decimal Salary { get; set; }
