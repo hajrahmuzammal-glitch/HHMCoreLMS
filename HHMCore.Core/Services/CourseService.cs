@@ -29,7 +29,7 @@ public class CourseService : ICourseService
         if (department == null)
             return ApiResponse<CourseResponseDto>.Fail("Department not found.");
 
-        var existing = await _unitOfWork.Courses.FindAsync(x => x.Code == dto.Code);
+        var existing = await _unitOfWork.Courses.FindAsync(x => x.Code == dto.Code.ToUpper());
         if (existing.Any())
             return ApiResponse<CourseResponseDto>.Fail("A course with this code already exists.");
 
@@ -106,23 +106,29 @@ public class CourseService : ICourseService
         if (course == null)
             return ApiResponse<CourseResponseDto>.Fail("Course not found.");
 
-        var department = await _unitOfWork.Departments.GetByIdAsync(dto.DepartmentId);
-        if (department == null)
-            return ApiResponse<CourseResponseDto>.Fail("Department not found.");
+        if (dto.DepartmentId.HasValue)
+        {
+            var department = await _unitOfWork.Departments.GetByIdAsync(dto.DepartmentId.Value);
+            if (department == null)
+                return ApiResponse<CourseResponseDto>.Fail("Department not found.");
+        }
 
-        var duplicate = await _unitOfWork.Courses.FindAsync(
-            x => x.Code == dto.Code.ToUpper() && x.Id != id
-        );
-        if (duplicate.Any())
-            return ApiResponse<CourseResponseDto>.Fail("A course with this code already exists.");
+        if (!string.IsNullOrWhiteSpace(dto.Code))
+        {
+            var duplicate = await _unitOfWork.Courses.FindAsync(
+                x => x.Code == dto.Code.ToUpper() && x.Id != id
+            );
+            if (duplicate.Any())
+                return ApiResponse<CourseResponseDto>.Fail("A course with this code already exists.");
+        }
 
-        course.Name = dto.Name;
-        course.Code = dto.Code.ToUpper();
-        course.Description = dto.Description;
-        course.CreditHours = dto.CreditHours;
-        course.SemesterNumber = dto.SemesterNumber;
-        course.DepartmentId = dto.DepartmentId;
-        course.IsActive = dto.IsActive;
+        course.Name = string.IsNullOrWhiteSpace(dto.Name) ? course.Name : dto.Name;
+        course.Code = string.IsNullOrWhiteSpace(dto.Code) ? course.Code : dto.Code.ToUpper();
+        course.Description = dto.Description ?? course.Description;
+        course.CreditHours = dto.CreditHours ?? course.CreditHours;
+        course.SemesterNumber = dto.SemesterNumber ?? course.SemesterNumber;
+        course.IsActive = dto.IsActive ?? course.IsActive;
+        course.DepartmentId = dto.DepartmentId ?? course.DepartmentId;
         course.UpdatedAt = DateTime.UtcNow;
         course.UpdatedBy = updatedBy;
 
@@ -137,7 +143,6 @@ public class CourseService : ICourseService
         var response = _mapper.Map<CourseResponseDto>(updated);
         return ApiResponse<CourseResponseDto>.Ok(response, "Course updated successfully.");
     }
-
     public async Task<ApiResponse> DeleteAsync(Guid id)
     {
         var course = await _unitOfWork.Courses.GetByIdAsync(id);

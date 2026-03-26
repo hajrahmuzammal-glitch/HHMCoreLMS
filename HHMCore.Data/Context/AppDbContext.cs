@@ -104,6 +104,12 @@ namespace HHMCore.Data.Context
                 .HasForeignKey(x => x.CourseAssignmentId)
                 .OnDelete(DeleteBehavior.Restrict);
 
+            builder.Entity<Attendance>()
+                .HasOne(x => x.Student)
+                .WithMany(x => x.Attendances)
+                .HasForeignKey(x => x.StudentId)
+                .OnDelete(DeleteBehavior.Restrict);
+
             builder.Entity<Assignment>()
                 .Property(a => a.TotalMarks)
                 .HasColumnType("decimal(18,2)");

@@ -35,7 +35,7 @@ namespace HHMCore.Data.Repositories
             _context = context;
         }
 
-        // The ?? operator means: "if null, create it — otherwise return what's already there"
+        //Lazy Initialization of repositories
         public IGenericRepository<Student> Students =>
             _students ??= new GenericRepository<Student>(_context);
 
