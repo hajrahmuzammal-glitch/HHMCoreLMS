@@ -1,9 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using AutoMapper;
+﻿using AutoMapper;
+using HHMCore.Core.Common;
 using HHMCore.Core.DTOs.Designation;
 using HHMCore.Core.Entities;
 using HHMCore.Core.Interfaces;
@@ -21,88 +17,87 @@ public class DesignationService : IDesignationService
         _mapper = mapper;
     }
 
-    public async Task<DesignationResponseDto> CreateAsync(CreateDesignationDto dto, string createdBy)
+    public async Task<ApiResponse<DesignationResponseDto>> CreateAsync(CreateDesignationDto dto, string createdBy)
     {
         var exists = await _unitOfWork.Designations.ExistsAsync(
             x => x.Title.ToLower() == dto.Title.ToLower());
-
         if (exists)
-            throw new InvalidOperationException($"Designation '{dto.Title}' already exists.");
+            return ApiResponse<DesignationResponseDto>.Fail($"Designation '{dto.Title}' already exists.");
 
-        var designation = _mapper.Map<Designation>(dto);
-        designation.CreatedBy = createdBy;
+        var designation = new Designation
+        {
+            Title = dto.Title,
+            Description = dto.Description,
+            CreatedBy = createdBy,
+            CreatedAt = DateTime.UtcNow
+        };
 
         await _unitOfWork.Designations.AddAsync(designation);
         await _unitOfWork.SaveChangesAsync();
 
-        return _mapper.Map<DesignationResponseDto>(designation);
+        var response = _mapper.Map<DesignationResponseDto>(designation);
+        return ApiResponse<DesignationResponseDto>.Ok(response, "Designation created successfully.");
     }
 
-    public async Task<List<DesignationResponseDto>> GetAllAsync()
+    public async Task<ApiResponse<IReadOnlyList<DesignationResponseDto>>> GetAllAsync()
     {
         var designations = await _unitOfWork.Designations.GetAllAsync();
-        return _mapper.Map<List<DesignationResponseDto>>(designations);
+        var response = _mapper.Map<IReadOnlyList<DesignationResponseDto>>(designations);
+        return ApiResponse<IReadOnlyList<DesignationResponseDto>>.Ok(response, "Designations retrieved successfully.");
     }
 
-    public async Task<DesignationResponseDto> GetByIdAsync(Guid id)
+    public async Task<ApiResponse<DesignationResponseDto>> GetByIdAsync(Guid id)
     {
         var designation = await _unitOfWork.Designations.GetByIdAsync(id);
-
         if (designation == null)
-            throw new KeyNotFoundException($"Designation with ID '{id}' was not found.");
+            return ApiResponse<DesignationResponseDto>.Fail("Designation not found.");
 
-        return _mapper.Map<DesignationResponseDto>(designation);
+        var response = _mapper.Map<DesignationResponseDto>(designation);
+        return ApiResponse<DesignationResponseDto>.Ok(response, "Designation retrieved successfully.");
     }
 
-    public async Task<DesignationResponseDto> UpdateAsync(Guid id, UpdateDesignationDto dto, string updatedBy)
+    public async Task<ApiResponse<DesignationResponseDto>> UpdateAsync(UpdateDesignationDto dto, string updatedBy)
     {
-        var designation = await _unitOfWork.Designations.GetByIdAsync(id);
-
+        var designation = await _unitOfWork.Designations.GetByIdAsync(dto.Id);
         if (designation == null)
-            throw new KeyNotFoundException($"Designation with ID '{id}' was not found.");
+            return ApiResponse<DesignationResponseDto>.Fail("Designation not found.");
 
-        if (dto.Title != null)
+        if (!string.IsNullOrWhiteSpace(dto.Title))
         {
             var titleExists = await _unitOfWork.Designations.ExistsAsync(
-                x => x.Title.ToLower() == dto.Title.ToLower() && x.Id != id);
-
+                x => x.Title.ToLower() == dto.Title.ToLower() && x.Id != dto.Id);
             if (titleExists)
-                throw new InvalidOperationException($"Designation '{dto.Title}' already exists.");
+                return ApiResponse<DesignationResponseDto>.Fail($"Designation '{dto.Title}' already exists.");
 
             designation.Title = dto.Title;
         }
 
-        if (dto.Description != null)
-            designation.Description = dto.Description;
-
+        designation.Description = string.IsNullOrWhiteSpace(dto.Description)
+            ? designation.Description
+            : dto.Description;
         designation.UpdatedBy = updatedBy;
         designation.UpdatedAt = DateTime.UtcNow;
 
         _unitOfWork.Designations.Update(designation);
         await _unitOfWork.SaveChangesAsync();
 
-        return _mapper.Map<DesignationResponseDto>(designation);
+        var response = _mapper.Map<DesignationResponseDto>(designation);
+        return ApiResponse<DesignationResponseDto>.Ok(response, "Designation updated successfully.");
     }
 
-    public async Task DeleteAsync(Guid id, string deletedBy)
+    public async Task<ApiResponse> DeleteAsync(Guid id)
     {
         var designation = await _unitOfWork.Designations.GetByIdAsync(id);
-
         if (designation == null)
-            throw new KeyNotFoundException($"Designation with ID '{id}' was not found.");
+            return ApiResponse.Fail("Designation not found.");
 
-        var hasTeachers = await _unitOfWork.Teachers.ExistsAsync(
-            x => x.DesignationId == id);
-
+        var hasTeachers = await _unitOfWork.Teachers.ExistsAsync(x => x.DesignationId == id);
         if (hasTeachers)
-            throw new InvalidOperationException(
-                "Cannot delete this designation because teachers are assigned to it.");
-
-        designation.IsDeleted = true;
-        designation.UpdatedBy = deletedBy;
-        designation.UpdatedAt = DateTime.UtcNow;
+            return ApiResponse.Fail("Cannot delete this designation because teachers are assigned to it.");
 
         _unitOfWork.Designations.Delete(designation);
         await _unitOfWork.SaveChangesAsync();
+
+        return ApiResponse.Ok("Designation deleted successfully.");
     }
 }

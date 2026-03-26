@@ -12,6 +12,11 @@ public class UpdateDesignationValidator : AbstractValidator<UpdateDesignationDto
 {
     public UpdateDesignationValidator()
     {
+
+        RuleFor(x => x.Id)
+            .Must(id => id != Guid.Empty)
+            .WithMessage("A valid Designation ID is required.");
+
         RuleFor(x => x.Title)
             .MaximumLength(100).WithMessage("Title cannot exceed 100 characters.")
             .When(x => x.Title != null);
