@@ -117,27 +117,40 @@ namespace HHMCore.Core.Services
             if (student == null)
                 return ApiResponse<StudentResponseDto>.Fail("Student not found.");
 
-            var department = await _unitOfWork.Departments.GetByIdAsync(dto.DepartmentId);
-            if (department == null)
-                return ApiResponse<StudentResponseDto>.Fail("Department not found.");
+            if (!string.IsNullOrWhiteSpace(dto.FullName))
+            {
+                var appUser = await _userManager.FindByIdAsync(student.UserId);
+                if (appUser != null)
+                {
+                    appUser.FullName = dto.FullName;
+                    await _userManager.UpdateAsync(appUser);
+                }
+            }
 
-            student.User.FullName = dto.FullName;
-            student.User.PhoneNumber = dto.PhoneNumber;
-            student.DepartmentId = dto.DepartmentId;
-            student.CurrentSemesterNumber = dto.CurrentSemesterNumber;
-            student.Address = dto.Address;
+            if (dto.DepartmentId.HasValue)
+            {
+                var department = await _unitOfWork.Departments.GetByIdAsync(dto.DepartmentId.Value);
+                if (department == null)
+                    return ApiResponse<StudentResponseDto>.Fail("Department not found.");
+                student.DepartmentId = dto.DepartmentId.Value;
+            }
+
+            student.CurrentSemesterNumber = dto.CurrentSemesterNumber ?? student.CurrentSemesterNumber;
+            student.Address = string.IsNullOrWhiteSpace(dto.Address) ? student.Address : dto.Address;
+            student.PhoneNumber = string.IsNullOrWhiteSpace(dto.PhoneNumber) ? student.PhoneNumber : dto.PhoneNumber;
             student.DateOfBirth = dto.DateOfBirth ?? student.DateOfBirth;
             student.UpdatedBy = updatedBy;
             student.UpdatedAt = DateTime.UtcNow;
 
-            await _userManager.UpdateAsync(student.User);
             _unitOfWork.Students.Update(student);
             await _unitOfWork.SaveChangesAsync();
 
-            var response = _mapper.Map<StudentResponseDto>(student);
-            return ApiResponse<StudentResponseDto>.Ok(response, "Student updated successfully.");
-        }
+            var updated = await _unitOfWork.Students
+                .GetByIdWithIncludesAsync(dto.Id, s => s.User, s => s.Department);
 
+            var response = _mapper.Map<StudentResponseDto>(updated);
+            return ApiResponse<StudentResponseDto>.Ok(response, "Student updated successfully."); 
+        }
         public async Task<ApiResponse> DeleteAsync(Guid id)
         {
             var student = await _unitOfWork.Students.GetByIdAsync(id);
