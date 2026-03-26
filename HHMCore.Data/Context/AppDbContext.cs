@@ -74,6 +74,12 @@ namespace HHMCore.Data.Context
                 .HasForeignKey(x => x.TeacherId)
                 .OnDelete(DeleteBehavior.Restrict);
 
+            builder.Entity<CourseAssignment>()
+                .HasOne(x => x.Semester)
+                .WithMany(x => x.CourseAssignments)
+                .HasForeignKey(x => x.SemesterId)
+                .OnDelete(DeleteBehavior.Restrict);
+
             builder.Entity<Enrollment>()
                 .HasOne(x => x.Course)
                 .WithMany(x => x.Enrollments)

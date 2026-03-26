@@ -1,5 +1,4 @@
-﻿using HHMCore.Core.Common;
-using HHMCore.Core.DTOs.Designation;
+﻿using HHMCore.Core.DTOs.Designation;
 using HHMCore.Core.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -19,41 +18,42 @@ public class DesignationController : ControllerBase
         _designationService = designationService;
     }
 
-    private string GetCurrentUserEmail() =>
-        User.FindFirstValue(ClaimTypes.Email) ?? "system";
-
     [HttpPost]
     public async Task<IActionResult> Create([FromBody] CreateDesignationDto dto)
     {
         var result = await _designationService.CreateAsync(dto, GetCurrentUserEmail());
-        return Ok(ApiResponse<DesignationResponseDto>.Ok(result, "Designation created successfully."));
+        return result.Success ? StatusCode(201, result) : BadRequest(result);
     }
 
     [HttpGet]
     public async Task<IActionResult> GetAll()
     {
         var result = await _designationService.GetAllAsync();
-        return Ok(ApiResponse<List<DesignationResponseDto>>.Ok(result, "Designations retrieved successfully."));
+        return Ok(result);
     }
 
-    [HttpGet("{id}")]
+    [HttpGet("{id:guid}")]
     public async Task<IActionResult> GetById(Guid id)
     {
         var result = await _designationService.GetByIdAsync(id);
-        return Ok(ApiResponse<DesignationResponseDto>.Ok(result, "Designation retrieved successfully."));
+        return result.Success ? Ok(result) : NotFound(result);
     }
 
-    [HttpPut("{id}")]
+    [HttpPut("{id:guid}")]
     public async Task<IActionResult> Update(Guid id, [FromBody] UpdateDesignationDto dto)
     {
-        var result = await _designationService.UpdateAsync(id, dto, GetCurrentUserEmail());
-        return Ok(ApiResponse<DesignationResponseDto>.Ok(result, "Designation updated successfully."));
+        dto.Id = id;
+        var result = await _designationService.UpdateAsync(dto, GetCurrentUserEmail());
+        return result.Success ? Ok(result) : BadRequest(result);
     }
 
-    [HttpDelete("{id}")]
+    [HttpDelete("{id:guid}")]
     public async Task<IActionResult> Delete(Guid id)
     {
-        await _designationService.DeleteAsync(id, GetCurrentUserEmail());
-        return Ok(ApiResponse.Ok("Designation deleted successfully."));
+        var result = await _designationService.DeleteAsync(id);
+        return result.Success ? Ok(result) : BadRequest(result);
     }
+
+    private string GetCurrentUserEmail() =>
+        User.FindFirstValue(ClaimTypes.Email) ?? "system";
 }
