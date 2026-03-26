@@ -65,21 +65,22 @@ public class DepartmentService : IDepartmentService
     public async Task<ApiResponse<DepartmentResponseDto>> UpdateAsync(UpdateDepartmentDto dto, string updatedBy)
     {
         var department = await _unitOfWork.Departments.GetByIdAsync(dto.Id);
-
         if (department == null)
             return ApiResponse<DepartmentResponseDto>.Fail("Department not found.");
 
-        // Check if another department already uses this code — exclude current one from check
-        var existing = await _unitOfWork.Departments
-            .FindAsync(x => x.Code == dto.Code.ToUpper() && x.Id != dto.Id);
+        if (!string.IsNullOrWhiteSpace(dto.Code))
+        {
+            var existing = await _unitOfWork.Departments
+                .FindAsync(x => x.Code == dto.Code.ToUpper() && x.Id != dto.Id);
+            if (existing.Any())
+                return ApiResponse<DepartmentResponseDto>.Fail("Another department with this code already exists.");
 
-        if (existing.Any())
-            return ApiResponse<DepartmentResponseDto>.Fail("Another department with this code already exists.");
+            department.Code = dto.Code.ToUpper();
+        }
 
-        department.Name = dto.Name;
-        department.Code = dto.Code.ToUpper();
-        department.Description = dto.Description;
-        department.IsActive = dto.IsActive;
+        department.Name = string.IsNullOrWhiteSpace(dto.Name) ? department.Name : dto.Name;
+        department.Description = string.IsNullOrWhiteSpace(dto.Description) ? department.Description : dto.Description;
+        department.IsActive = dto.IsActive ?? department.IsActive;
         department.UpdatedAt = DateTime.UtcNow;
         department.UpdatedBy = updatedBy;
 
@@ -89,7 +90,6 @@ public class DepartmentService : IDepartmentService
         var response = _mapper.Map<DepartmentResponseDto>(department);
         return ApiResponse<DepartmentResponseDto>.Ok(response, "Department updated successfully.");
     }
-
     public async Task<ApiResponse> DeleteAsync(Guid id)
     {
         var department = await _unitOfWork.Departments.GetByIdAsync(id);

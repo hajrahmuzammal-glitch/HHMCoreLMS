@@ -13,16 +13,19 @@ public class UpdateDepartmentValidator : AbstractValidator<UpdateDepartmentDto>
     public UpdateDepartmentValidator()
     {
         RuleFor(x => x.Id)
-            .NotEmpty().WithMessage("Department ID is required.");
+            .Must(id => id != Guid.Empty)
+            .WithMessage("A valid Department ID is required.");
 
         RuleFor(x => x.Name)
-            .NotEmpty().WithMessage("Department name is required.")
-            .MaximumLength(100).WithMessage("Name cannot exceed 100 characters.");
+            .NotEmpty().WithMessage("Department name cannot be empty.")
+            .MaximumLength(100).WithMessage("Name cannot exceed 100 characters.")
+            .When(x => !string.IsNullOrWhiteSpace(x.Name));
 
         RuleFor(x => x.Code)
-            .NotEmpty().WithMessage("Department code is required.")
+            .NotEmpty().WithMessage("Department code cannot be empty.")
             .MaximumLength(10).WithMessage("Code cannot exceed 10 characters.")
-            .Matches("^[a-zA-Z]+$").WithMessage("Code must contain letters only.");
+            .Matches("^[a-zA-Z]+$").WithMessage("Code must contain letters only.")
+            .When(x => !string.IsNullOrWhiteSpace(x.Code));
 
         RuleFor(x => x.Description)
             .MaximumLength(500).WithMessage("Description cannot exceed 500 characters.")
