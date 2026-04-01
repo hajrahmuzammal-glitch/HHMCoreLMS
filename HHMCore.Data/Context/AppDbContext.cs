@@ -152,6 +152,77 @@ namespace HHMCore.Data.Context
                 .HasForeignKey(x => x.DesignationId)
                 .OnDelete(DeleteBehavior.Restrict);
 
+            builder.Entity<Assignment>()
+                .HasOne(x => x.CourseAssignment)
+                .WithMany(x => x.Assignments)
+                .HasForeignKey(x => x.CourseAssignmentId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            builder.Entity<AssignmentSubmission>()
+                .HasOne(x => x.Student)
+                .WithMany(x => x.Submissions)
+                .HasForeignKey(x => x.StudentId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            builder.Entity<Course>()
+                .HasOne(x => x.Department)
+                .WithMany(x => x.Courses)
+                .HasForeignKey(x => x.DepartmentId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            builder.Entity<Enrollment>()
+                .HasOne(x => x.Student)
+                .WithMany(x => x.Enrollments)
+                .HasForeignKey(x => x.StudentId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            builder.Entity<FeeRecord>()
+                .HasOne(x => x.Student)
+                .WithMany(x => x.FeeRecords)
+                .HasForeignKey(x => x.StudentId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            builder.Entity<FeeRecord>()
+                .HasOne(x => x.Semester)
+                .WithMany(x => x.FeeRecords)
+                .HasForeignKey(x => x.SemesterId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            builder.Entity<Quiz>()
+                .HasOne(x => x.CourseAssignment)
+                .WithMany(x => x.Quizzes)
+                .HasForeignKey(x => x.CourseAssignmentId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            builder.Entity<QuizResult>()
+                .HasOne(x => x.Student)
+                .WithMany(x => x.QuizResults)
+                .HasForeignKey(x => x.StudentId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            builder.Entity<Student>()
+                .HasOne(x => x.Department)
+                .WithMany(x => x.Students)
+                .HasForeignKey(x => x.DepartmentId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            builder.Entity<Student>()
+                .HasOne(x => x.User)
+                .WithMany()
+                .HasForeignKey(x => x.UserId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            builder.Entity<Teacher>()
+                .HasOne(x => x.Department)
+                .WithMany(x => x.Teachers)
+                .HasForeignKey(x => x.DepartmentId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            builder.Entity<Teacher>()
+                .HasOne(x => x.User)
+                .WithMany()
+                .HasForeignKey(x => x.UserId)
+                .OnDelete(DeleteBehavior.Restrict);
         }
     }
 }
