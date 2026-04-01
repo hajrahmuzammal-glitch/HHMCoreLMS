@@ -96,6 +96,8 @@ builder.Services.AddScoped<IStudentService, StudentService>();
 builder.Services.AddScoped<ITeacherService, TeacherService>();
 builder.Services.AddScoped<IDesignationService, DesignationService>();
 builder.Services.AddScoped<ISemesterService, SemesterService>();
+builder.Services.AddScoped<ICourseAssignmentService, CourseAssignmentService>();
+
 // ----------------------------------------
 // 7. AUTOMAPPER
 // ----------------------------------------

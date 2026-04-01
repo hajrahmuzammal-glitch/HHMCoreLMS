@@ -4,6 +4,7 @@ using HHMCore.Data.Context;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace HHMCore.Data.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260326220804_FixForeignKeyRelationships")]
+    partial class FixForeignKeyRelationships
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -971,7 +974,7 @@ namespace HHMCore.Data.Migrations
                     b.HasOne("HHMCore.Core.Entities.CourseAssignment", "CourseAssignment")
                         .WithMany("Assignments")
                         .HasForeignKey("CourseAssignmentId")
-                        .OnDelete(DeleteBehavior.Restrict)
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.Navigation("CourseAssignment");
@@ -988,7 +991,7 @@ namespace HHMCore.Data.Migrations
                     b.HasOne("HHMCore.Core.Entities.Student", "Student")
                         .WithMany("Submissions")
                         .HasForeignKey("StudentId")
-                        .OnDelete(DeleteBehavior.Restrict)
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.Navigation("Assignment");
@@ -1020,7 +1023,7 @@ namespace HHMCore.Data.Migrations
                     b.HasOne("HHMCore.Core.Entities.Department", "Department")
                         .WithMany("Courses")
                         .HasForeignKey("DepartmentId")
-                        .OnDelete(DeleteBehavior.Restrict)
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.Navigation("Department");
@@ -1070,7 +1073,7 @@ namespace HHMCore.Data.Migrations
                     b.HasOne("HHMCore.Core.Entities.Student", "Student")
                         .WithMany("Enrollments")
                         .HasForeignKey("StudentId")
-                        .OnDelete(DeleteBehavior.Restrict)
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.Navigation("Course");
@@ -1085,13 +1088,13 @@ namespace HHMCore.Data.Migrations
                     b.HasOne("HHMCore.Core.Entities.Semester", "Semester")
                         .WithMany("FeeRecords")
                         .HasForeignKey("SemesterId")
-                        .OnDelete(DeleteBehavior.Restrict)
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.HasOne("HHMCore.Core.Entities.Student", "Student")
                         .WithMany("FeeRecords")
                         .HasForeignKey("StudentId")
-                        .OnDelete(DeleteBehavior.Restrict)
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.Navigation("Semester");
@@ -1104,7 +1107,7 @@ namespace HHMCore.Data.Migrations
                     b.HasOne("HHMCore.Core.Entities.CourseAssignment", "CourseAssignment")
                         .WithMany("Quizzes")
                         .HasForeignKey("CourseAssignmentId")
-                        .OnDelete(DeleteBehavior.Restrict)
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.Navigation("CourseAssignment");
@@ -1121,7 +1124,7 @@ namespace HHMCore.Data.Migrations
                     b.HasOne("HHMCore.Core.Entities.Student", "Student")
                         .WithMany("QuizResults")
                         .HasForeignKey("StudentId")
-                        .OnDelete(DeleteBehavior.Restrict)
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.Navigation("Quiz");
@@ -1134,13 +1137,13 @@ namespace HHMCore.Data.Migrations
                     b.HasOne("HHMCore.Core.Entities.Department", "Department")
                         .WithMany("Students")
                         .HasForeignKey("DepartmentId")
-                        .OnDelete(DeleteBehavior.Restrict)
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.HasOne("HHMCore.Core.Entities.AppUser", "User")
                         .WithMany()
                         .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Restrict)
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.Navigation("Department");
@@ -1153,7 +1156,7 @@ namespace HHMCore.Data.Migrations
                     b.HasOne("HHMCore.Core.Entities.Department", "Department")
                         .WithMany("Teachers")
                         .HasForeignKey("DepartmentId")
-                        .OnDelete(DeleteBehavior.Restrict)
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.HasOne("HHMCore.Core.Entities.Designation", "Designation")
@@ -1165,7 +1168,7 @@ namespace HHMCore.Data.Migrations
                     b.HasOne("HHMCore.Core.Entities.AppUser", "User")
                         .WithMany()
                         .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Restrict)
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.Navigation("Department");
