@@ -1,5 +1,4 @@
-﻿
-using HHMCore.Core.DTOs.CourseAssignment;
+﻿using HHMCore.Core.DTOs.CourseAssignment;
 using HHMCore.Core.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -12,22 +11,18 @@ namespace HHMCore.WebAPI.Controllers;
 [Authorize]
 public class CourseAssignmentController : ControllerBase
 {
-    private readonly ICourseAssignmentService _service;
-    private readonly IUnitOfWork _unitOfWork;
+    private readonly ICourseAssignmentService _courseAssignmentService;
 
-    public CourseAssignmentController(
-        ICourseAssignmentService service,
-        IUnitOfWork unitOfWork)
+    public CourseAssignmentController(ICourseAssignmentService courseAssignmentService)
     {
-        _service = service;
-        _unitOfWork = unitOfWork;
+        _courseAssignmentService = courseAssignmentService;
     }
 
     [HttpPost]
     [Authorize(Roles = "Admin")]
     public async Task<IActionResult> Create([FromBody] CreateCourseAssignmentDto dto)
     {
-        var result = await _service.CreateAsync(dto, GetCurrentUserEmail());
+        var result = await _courseAssignmentService.CreateAsync(dto, GetCurrentUserEmail());
         return result.Success ? StatusCode(201, result) : BadRequest(result);
     }
 
@@ -35,7 +30,7 @@ public class CourseAssignmentController : ControllerBase
     [Authorize(Roles = "Admin")]
     public async Task<IActionResult> GetAll()
     {
-        var result = await _service.GetAllAsync();
+        var result = await _courseAssignmentService.GetAllAsync();
         return Ok(result);
     }
 
@@ -43,7 +38,7 @@ public class CourseAssignmentController : ControllerBase
     [Authorize(Roles = "Admin,Teacher")]
     public async Task<IActionResult> GetById(Guid id)
     {
-        var result = await _service.GetByIdAsync(id);
+        var result = await _courseAssignmentService.GetByIdAsync(id);
         return result.Success ? Ok(result) : NotFound(result);
     }
 
@@ -51,39 +46,31 @@ public class CourseAssignmentController : ControllerBase
     [Authorize(Roles = "Admin,Teacher")]
     public async Task<IActionResult> GetBySemester(Guid semesterId)
     {
-        var result = await _service.GetBySemesterAsync(semesterId);
+        var result = await _courseAssignmentService.GetBySemesterAsync(semesterId);
         return result.Success ? Ok(result) : NotFound(result);
     }
 
-    // Teacher sees own schedule — blocked from viewing other teachers
     [HttpGet("teacher/{teacherId:guid}")]
-    [Authorize(Roles = "Admin,Teacher")]
+    [Authorize(Roles = "Admin")]
     public async Task<IActionResult> GetByTeacher(Guid teacherId)
     {
-        if (IsTeacher())
-        {
-            var currentUserId = GetCurrentUserId();
-            var teacher = await _unitOfWork.Teachers.FindOneAsync(
-                t => t.Id == teacherId && t.UserId == currentUserId);
-
-            if (teacher == null)
-                return StatusCode(403, new
-                {
-                    success = false,
-                    message = "You are not authorized to view this schedule."
-                });
-        }
-
-        var result = await _service.GetByTeacherAsync(teacherId);
+        var result = await _courseAssignmentService.GetByTeacherAsync(teacherId);
         return result.Success ? Ok(result) : NotFound(result);
+    }
+
+    [HttpGet("my")]
+    [Authorize(Roles = "Teacher")]
+    public async Task<IActionResult> GetMyAssignments()
+    {
+        var result = await _courseAssignmentService.GetMyAssignmentsAsync(GetCurrentUserId());
+        return result.Success ? Ok(result) : BadRequest(result);
     }
 
     [HttpPut("{id:guid}")]
     [Authorize(Roles = "Admin")]
     public async Task<IActionResult> Update(Guid id, [FromBody] UpdateCourseAssignmentDto dto)
     {
-        dto.Id = id;
-        var result = await _service.UpdateAsync(dto, GetCurrentUserEmail());
+        var result = await _courseAssignmentService.UpdateAsync(id, dto, GetCurrentUserEmail());
         return result.Success ? Ok(result) : BadRequest(result);
     }
 
@@ -91,7 +78,7 @@ public class CourseAssignmentController : ControllerBase
     [Authorize(Roles = "Admin")]
     public async Task<IActionResult> Delete(Guid id)
     {
-        var result = await _service.DeleteAsync(id);
+        var result = await _courseAssignmentService.DeleteAsync(id, GetCurrentUserEmail());
         return result.Success ? Ok(result) : BadRequest(result);
     }
 
@@ -100,7 +87,4 @@ public class CourseAssignmentController : ControllerBase
 
     private string GetCurrentUserEmail() =>
         User.FindFirstValue(ClaimTypes.Email) ?? "system";
-
-    private bool IsTeacher() =>
-        User.FindFirstValue(ClaimTypes.Role) == "Teacher";
 }

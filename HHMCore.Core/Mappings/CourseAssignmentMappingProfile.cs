@@ -24,6 +24,16 @@ public class CourseAssignmentMappingProfile : Profile
                     src.Course != null ? src.Course.Code : string.Empty))
             .ForMember(dest => dest.SemesterName,
                 opt => opt.MapFrom(src =>
-                    src.Semester != null ? src.Semester.Name : string.Empty));
+                    src.Semester != null ? src.Semester.Name : string.Empty))
+            .ForMember(dest => dest.RoomNumber,
+                opt => opt.MapFrom(src =>
+                    src.Room != null ? src.Room.RoomNumber : string.Empty))
+            .ForMember(dest => dest.Building,
+                opt => opt.MapFrom(src => 
+                    src.Room != null ? src.Room.Building : string.Empty))
+            .ForMember(dest => dest.TimeSlotLabel,
+                opt => opt.MapFrom(src =>
+                    src.TimeSlot != null ? src.TimeSlot.Label : string.Empty));
+
     }
 }

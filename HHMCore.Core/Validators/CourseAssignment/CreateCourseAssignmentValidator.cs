@@ -21,12 +21,10 @@ public class CreateCourseAssignmentValidator
             .NotEmpty().WithMessage("Semester is required.")
             .Must(id => id != Guid.Empty).WithMessage("A valid Semester Id is required.");
 
-        RuleFor(x => x.Room)
-            .MaximumLength(50).WithMessage("Room cannot exceed 50 characters.")
-            .When(x => !string.IsNullOrWhiteSpace(x.Room));
+        RuleFor(x => x.RoomId)
+            .Must(id => id != Guid.Empty).WithMessage("A valid room is required.");
 
-        RuleFor(x => x.Schedule)
-            .MaximumLength(200).WithMessage("Schedule cannot exceed 200 characters.")
-            .When(x => !string.IsNullOrWhiteSpace(x.Schedule));
+        RuleFor(x => x.TimeSlotId)
+            .Must(id => id != Guid.Empty).WithMessage("A valid time slot is required.");
     }
 }

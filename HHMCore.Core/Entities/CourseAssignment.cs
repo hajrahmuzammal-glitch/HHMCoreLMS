@@ -17,8 +17,11 @@ namespace HHMCore.Core.Entities
         public Guid SemesterId { get; set; }
         public Semester Semester { get; set; } = null!;
 
-        public string? Room { get; set; }
-        public string? Schedule { get; set; }
+        public Guid RoomId { get; set; }
+        public Room Room { get; set; } = null!;
+
+        public Guid TimeSlotId { get; set; }
+        public TimeSlot TimeSlot { get; set; } = null!;
 
         public ICollection<Attendance> Attendances { get; set; } = new List<Attendance>();
         public ICollection<Assignment> Assignments { get; set; } = new List<Assignment>();

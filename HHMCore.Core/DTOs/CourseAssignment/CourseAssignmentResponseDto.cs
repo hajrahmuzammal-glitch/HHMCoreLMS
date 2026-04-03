@@ -12,7 +12,10 @@ public class CourseAssignmentResponseDto
     public string CourseCode { get; set; } = string.Empty;
     public Guid SemesterId { get; set; }
     public string SemesterName { get; set; } = string.Empty;
-    public string? Room { get; set; }
-    public string? Schedule { get; set; }
+    public Guid RoomId { get; set; }
+    public string RoomNumber { get; set; } = string.Empty;
+    public string Building { get; set; } = string.Empty;
+    public Guid TimeSlotId { get; set; }
+    public string TimeSlotLabel { get; set; } = string.Empty;
     public DateTime CreatedAt { get; set; }
 }
