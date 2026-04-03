@@ -21,6 +21,15 @@ namespace HHMCore.Core.Interfaces
         Task<IReadOnlyList<T>> FindWithIncludesAsync(Expression<Func<T, bool>> predicate, params Expression<Func<T, object>>[] includes);
         Task<T?> FindOneWithIncludesAsync(Expression<Func<T, bool>> predicate, params Expression<Func<T, object>>[] includes);
 
+        Task<T?> GetByIdWithPathIncludesAsync(Guid id, params string[] paths);
+        Task<IReadOnlyList<T>> GetAllWithPathIncludesAsync(params string[] paths);
+        Task<IReadOnlyList<T>> FindWithPathIncludesAsync(Expression<Func<T, bool>> predicate, params string[] paths);
+        Task<T?> FindOneWithPathIncludesAsync(Expression<Func<T, bool>> predicate, params string[] paths);
+
+
+        Task AddAsync(T entity);
+        void Update(T entity);
+        void Delete(T entity);
     }
 }
 //Note : It is handling the CRUD

@@ -1,13 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Linq.Expressions;
 using HHMCore.Core.Entities;
 using HHMCore.Core.Interfaces;
 using HHMCore.Data.Context;
 using Microsoft.EntityFrameworkCore;
-using System.Linq.Expressions;
 
 namespace HHMCore.Data.Repositories
 {
@@ -22,20 +17,108 @@ namespace HHMCore.Data.Repositories
             _dbSet = context.Set<T>();
         }
 
+        // ── Single Lookups ────────────────────────────────────────────────
+
         public async Task<T?> GetByIdAsync(Guid id)
         {
             return await _dbSet.FindAsync(id);
         }
 
+        public async Task<T?> FindOneAsync(Expression<Func<T, bool>> predicate)
+        {
+            IQueryable<T> query = _dbSet;
+            return await query.FirstOrDefaultAsync(predicate);
+        }
+
+        // ── Collection Lookups ────────────────────────────────────────────
+
         public async Task<IReadOnlyList<T>> GetAllAsync()
         {
-            return await _dbSet.ToListAsync();
+            IQueryable<T> query = _dbSet;
+            return await query.ToListAsync();
         }
 
         public async Task<IReadOnlyList<T>> FindAsync(Expression<Func<T, bool>> predicate)
         {
-            return await _dbSet.Where(predicate).ToListAsync();
+            IQueryable<T> query = _dbSet;
+            return await query.Where(predicate).ToListAsync();
         }
+
+        public async Task<bool> ExistsAsync(Expression<Func<T, bool>> predicate)
+        {
+            IQueryable<T> query = _dbSet;
+            return await query.AnyAsync(predicate);
+        }
+
+        // ── With Typed Includes ───────────────────────────────────────────
+
+        public async Task<T?> GetByIdWithIncludesAsync(Guid id, params Expression<Func<T, object>>[] includes)
+        {
+            IQueryable<T> query = _dbSet;
+            foreach (var include in includes)
+                query = query.Include(include);
+            return await query.FirstOrDefaultAsync(e => e.Id == id);
+        }
+
+        public async Task<IReadOnlyList<T>> GetAllWithIncludesAsync(params Expression<Func<T, object>>[] includes)
+        {
+            IQueryable<T> query = _dbSet;
+            foreach (var include in includes)
+                query = query.Include(include);
+            return await query.ToListAsync();
+        }
+
+        public async Task<IReadOnlyList<T>> FindWithIncludesAsync(Expression<Func<T, bool>> predicate, params Expression<Func<T, object>>[] includes)
+        {
+            IQueryable<T> query = _dbSet;
+            foreach (var include in includes)
+                query = query.Include(include);
+            return await query.Where(predicate).ToListAsync();
+        }
+
+        public async Task<T?> FindOneWithIncludesAsync(Expression<Func<T, bool>> predicate, params Expression<Func<T, object>>[] includes)
+        {
+            IQueryable<T> query = _dbSet;
+            foreach (var include in includes)
+                query = query.Include(include);
+            return await query.FirstOrDefaultAsync(predicate);
+        }
+
+        // ── With String Path Includes ─────────────────────────────────────
+
+        public async Task<T?> GetByIdWithPathIncludesAsync(Guid id, params string[] paths)
+        {
+            IQueryable<T> query = _dbSet;
+            foreach (var path in paths)
+                query = query.Include(path);
+            return await query.FirstOrDefaultAsync(e => e.Id == id);
+        }
+
+        public async Task<IReadOnlyList<T>> GetAllWithPathIncludesAsync(params string[] paths)
+        {
+            IQueryable<T> query = _dbSet;
+            foreach (var path in paths)
+                query = query.Include(path);
+            return await query.ToListAsync();
+        }
+
+        public async Task<IReadOnlyList<T>> FindWithPathIncludesAsync(Expression<Func<T, bool>> predicate, params string[] paths)
+        {
+            IQueryable<T> query = _dbSet;
+            foreach (var path in paths)
+                query = query.Include(path);
+            return await query.Where(predicate).ToListAsync();
+        }
+
+        public async Task<T?> FindOneWithPathIncludesAsync(Expression<Func<T, bool>> predicate, params string[] paths)
+        {
+            IQueryable<T> query = _dbSet;
+            foreach (var path in paths)
+                query = query.Include(path);
+            return await query.FirstOrDefaultAsync(predicate);
+        }
+
+        // ── Write Operations ──────────────────────────────────────────────
 
         public async Task AddAsync(T entity)
         {
@@ -51,52 +134,6 @@ namespace HHMCore.Data.Repositories
         {
             entity.IsDeleted = true;
             Update(entity);
-        }
-
-        public async Task<T?> FindOneAsync(Expression<Func<T, bool>> predicate)
-        {
-            return await _dbSet.FirstOrDefaultAsync(predicate);
-        }
-
-        public async Task<bool> ExistsAsync(Expression<Func<T, bool>> predicate)
-        {
-            return await _dbSet.AnyAsync(predicate);
-        }
-        public async Task<T?> GetByIdWithIncludesAsync(Guid id, params Expression<Func<T, object>>[] includes)
-        {
-            IQueryable<T> query = _context.Set<T>();
-
-            foreach (var include in includes)
-                query = query.Include(include);
-
-            return await query.FirstOrDefaultAsync(e => EF.Property<Guid>(e, "Id") == id);
-        }
-
-        public async Task<IReadOnlyList<T>> GetAllWithIncludesAsync(params Expression<Func<T, object>>[] includes)
-        {
-            IQueryable<T> query = _context.Set<T>();
-
-            foreach (var include in includes)
-                query = query.Include(include);
-
-            return await query.ToListAsync();
-        }
-
-        public async Task<IReadOnlyList<T>> FindWithIncludesAsync(Expression<Func<T, bool>> predicate, params Expression<Func<T, object>>[] includes)
-        {
-            IQueryable<T> query = _context.Set<T>();
-
-            foreach (var include in includes)
-                query = query.Include(include);
-
-            return await query.Where(predicate).ToListAsync();
-        }
-        public async Task<T?> FindOneWithIncludesAsync(Expression<Func<T, bool>> predicate,params Expression<Func<T, object>>[] includes)
-        {
-            IQueryable<T> query = _context.Set<T>();
-            foreach (var include in includes)
-                query = query.Include(include);
-            return await query.FirstOrDefaultAsync(predicate);
         }
     }
 }

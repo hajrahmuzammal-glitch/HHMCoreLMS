@@ -15,6 +15,8 @@ namespace HHMCore.Data.Repositories
         private IGenericRepository<Course>? _courses;
         private IGenericRepository<Semester>? _semesters;
         private IGenericRepository<CourseAssignment>? _courseAssignments;
+        private IGenericRepository<Room>? _rooms;
+        private IGenericRepository<TimeSlot>? _timeSlots;
         private IGenericRepository<Enrollment>? _enrollments;
         private IGenericRepository<Attendance>? _attendances;
         private IGenericRepository<Assignment>? _assignments;
@@ -47,7 +49,12 @@ namespace HHMCore.Data.Repositories
 
         public IGenericRepository<CourseAssignment> CourseAssignments =>
             _courseAssignments ??= new GenericRepository<CourseAssignment>(_context);
+        public IGenericRepository<Room> Rooms =>
+        _rooms ??= new GenericRepository<Room>(_context);
 
+        public IGenericRepository<TimeSlot> TimeSlots =>
+            _timeSlots ??= new GenericRepository<TimeSlot>(_context);
+        
         public IGenericRepository<Enrollment> Enrollments =>
             _enrollments ??= new GenericRepository<Enrollment>(_context);
 
@@ -74,14 +81,11 @@ namespace HHMCore.Data.Repositories
 
         // One call saves ALL pending changes across ALL repositories
         public async Task<int> SaveChangesAsync()
-        {
-            return await _context.SaveChangesAsync();
-        }
+             => await _context.SaveChangesAsync();
+
 
         // Frees the DbContext from memory when the request is done
         public void Dispose()
-        {
-            _context.Dispose();
-        }
+            => _context.Dispose();
     }
 }
