@@ -21,40 +21,42 @@ namespace HHMCore.Data.Repositories
 
         public async Task<T?> GetByIdAsync(Guid id)
         {
-            return await _dbSet.FindAsync(id);
+            return await _dbSet.AsNoTracking()
+                               .FirstOrDefaultAsync(e => e.Id == id);
         }
 
         public async Task<T?> FindOneAsync(Expression<Func<T, bool>> predicate)
         {
-            IQueryable<T> query = _dbSet;
-            return await query.FirstOrDefaultAsync(predicate);
+            return await _dbSet.AsNoTracking()
+                               .FirstOrDefaultAsync(predicate);
         }
 
         // ── Collection Lookups ────────────────────────────────────────────
 
         public async Task<IReadOnlyList<T>> GetAllAsync()
         {
-            IQueryable<T> query = _dbSet;
-            return await query.ToListAsync();
+            return await _dbSet.AsNoTracking()
+                               .ToListAsync();
         }
 
         public async Task<IReadOnlyList<T>> FindAsync(Expression<Func<T, bool>> predicate)
         {
-            IQueryable<T> query = _dbSet;
-            return await query.Where(predicate).ToListAsync();
+            return await _dbSet.AsNoTracking()
+                               .Where(predicate)
+                               .ToListAsync();
         }
 
         public async Task<bool> ExistsAsync(Expression<Func<T, bool>> predicate)
         {
-            IQueryable<T> query = _dbSet;
-            return await query.AnyAsync(predicate);
+            return await _dbSet.AsNoTracking()
+                               .AnyAsync(predicate);
         }
 
         // ── With Typed Includes ───────────────────────────────────────────
 
         public async Task<T?> GetByIdWithIncludesAsync(Guid id, params Expression<Func<T, object>>[] includes)
         {
-            IQueryable<T> query = _dbSet;
+            IQueryable<T> query = _dbSet.AsNoTracking();
             foreach (var include in includes)
                 query = query.Include(include);
             return await query.FirstOrDefaultAsync(e => e.Id == id);
@@ -62,7 +64,7 @@ namespace HHMCore.Data.Repositories
 
         public async Task<IReadOnlyList<T>> GetAllWithIncludesAsync(params Expression<Func<T, object>>[] includes)
         {
-            IQueryable<T> query = _dbSet;
+            IQueryable<T> query = _dbSet.AsNoTracking();
             foreach (var include in includes)
                 query = query.Include(include);
             return await query.ToListAsync();
@@ -70,7 +72,7 @@ namespace HHMCore.Data.Repositories
 
         public async Task<IReadOnlyList<T>> FindWithIncludesAsync(Expression<Func<T, bool>> predicate, params Expression<Func<T, object>>[] includes)
         {
-            IQueryable<T> query = _dbSet;
+            IQueryable<T> query = _dbSet.AsNoTracking();
             foreach (var include in includes)
                 query = query.Include(include);
             return await query.Where(predicate).ToListAsync();
@@ -78,7 +80,7 @@ namespace HHMCore.Data.Repositories
 
         public async Task<T?> FindOneWithIncludesAsync(Expression<Func<T, bool>> predicate, params Expression<Func<T, object>>[] includes)
         {
-            IQueryable<T> query = _dbSet;
+            IQueryable<T> query = _dbSet.AsNoTracking();
             foreach (var include in includes)
                 query = query.Include(include);
             return await query.FirstOrDefaultAsync(predicate);
@@ -88,7 +90,7 @@ namespace HHMCore.Data.Repositories
 
         public async Task<T?> GetByIdWithPathIncludesAsync(Guid id, params string[] paths)
         {
-            IQueryable<T> query = _dbSet;
+            IQueryable<T> query = _dbSet.AsNoTracking();
             foreach (var path in paths)
                 query = query.Include(path);
             return await query.FirstOrDefaultAsync(e => e.Id == id);
@@ -96,7 +98,7 @@ namespace HHMCore.Data.Repositories
 
         public async Task<IReadOnlyList<T>> GetAllWithPathIncludesAsync(params string[] paths)
         {
-            IQueryable<T> query = _dbSet;
+            IQueryable<T> query = _dbSet.AsNoTracking();
             foreach (var path in paths)
                 query = query.Include(path);
             return await query.ToListAsync();
@@ -104,7 +106,7 @@ namespace HHMCore.Data.Repositories
 
         public async Task<IReadOnlyList<T>> FindWithPathIncludesAsync(Expression<Func<T, bool>> predicate, params string[] paths)
         {
-            IQueryable<T> query = _dbSet;
+            IQueryable<T> query = _dbSet.AsNoTracking();
             foreach (var path in paths)
                 query = query.Include(path);
             return await query.Where(predicate).ToListAsync();
@@ -112,7 +114,7 @@ namespace HHMCore.Data.Repositories
 
         public async Task<T?> FindOneWithPathIncludesAsync(Expression<Func<T, bool>> predicate, params string[] paths)
         {
-            IQueryable<T> query = _dbSet;
+            IQueryable<T> query = _dbSet.AsNoTracking();
             foreach (var path in paths)
                 query = query.Include(path);
             return await query.FirstOrDefaultAsync(predicate);
