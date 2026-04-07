@@ -14,6 +14,7 @@ public class AppDbContext : IdentityDbContext<AppUser>
     public DbSet<Designation> Designations { get; set; }
     public DbSet<Course> Courses { get; set; }
     public DbSet<Semester> Semesters { get; set; }
+        public DbSet<Building> Buildings { get; set; }
     public DbSet<Room> Rooms { get; set; }
     public DbSet<TimeSlot> TimeSlots { get; set; }
     public DbSet<CourseAssignment> CourseAssignments { get; set; }
@@ -29,13 +30,15 @@ public class AppDbContext : IdentityDbContext<AppUser>
     {
         base.OnModelCreating(builder);
 
-        // ── Global Query Filters ──────────────────────────────────────────
+            // ── GLOBAL QUERY FILTERS ──────────────────────────────────────────────
+            // These add WHERE IsDeleted = 0 automatically to EVERY query
         builder.Entity<Department>().HasQueryFilter(d => !d.IsDeleted);
         builder.Entity<Student>().HasQueryFilter(s => !s.IsDeleted);
         builder.Entity<Teacher>().HasQueryFilter(t => !t.IsDeleted);
         builder.Entity<Designation>().HasQueryFilter(d => !d.IsDeleted);
         builder.Entity<Course>().HasQueryFilter(c => !c.IsDeleted);
         builder.Entity<Semester>().HasQueryFilter(s => !s.IsDeleted);
+            builder.Entity<Building>().HasQueryFilter(b => !b.IsDeleted);
         builder.Entity<Room>().HasQueryFilter(r => !r.IsDeleted);
         builder.Entity<TimeSlot>().HasQueryFilter(ts => !ts.IsDeleted);
         builder.Entity<CourseAssignment>().HasQueryFilter(ca => !ca.IsDeleted);
@@ -90,7 +93,14 @@ public class AppDbContext : IdentityDbContext<AppUser>
             .HasForeignKey(c => c.DepartmentId)
             .OnDelete(DeleteBehavior.Restrict);
 
-        // ── CourseAssignment ──────────────────────────────────────────────
+            // ── Room → Building ───────────────────────────────────────────────────
+            builder.Entity<Room>()
+                .HasOne(r => r.Building)
+                .WithMany(b => b.Rooms)
+                .HasForeignKey(r => r.BuildingId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // ── CourseAssignment ──────────────────────────────────────────────────
         builder.Entity<CourseAssignment>()
             .HasOne(ca => ca.Teacher)
             .WithMany(t => t.CourseAssignments)

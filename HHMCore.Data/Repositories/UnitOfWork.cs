@@ -14,7 +14,7 @@ namespace HHMCore.Data.Repositories
         private IGenericRepository<Department>? _departments;
         private IGenericRepository<Course>? _courses;
         private IGenericRepository<Semester>? _semesters;
-        private IGenericRepository<CourseAssignment>? _courseAssignments;
+        private IGenericRepository<Building>? _buildings;
         private IGenericRepository<Room>? _rooms;
         private IGenericRepository<TimeSlot>? _timeSlots;
         private IGenericRepository<Enrollment>? _enrollments;
