@@ -23,12 +23,7 @@ namespace HHMCore.WebAPI.Controllers
         {
             var result = await _authService.RegisterAsync(dto);
 
-            return Ok(new ApiResponse<AuthResponseDto>
-            {
-                Success = true,
-                Message = "Registration successful.",
-                Data = result
-            });
+            return Ok(result);
         }
 
         [HttpPost("login")]
@@ -36,12 +31,7 @@ namespace HHMCore.WebAPI.Controllers
         {
             var result = await _authService.LoginAsync(dto);
 
-            return Ok(new ApiResponse<AuthResponseDto>
-            {
-                Success = true,
-                Message = "Login successful.",
-                Data = result
-            });
+            return Ok(result);
         }
 
         [HttpGet("me")]

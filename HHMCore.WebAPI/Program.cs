@@ -1,6 +1,7 @@
 
 using FluentValidation;
 using FluentValidation.AspNetCore;
+using HHMCore.Core.Common;
 using HHMCore.Core.Entities;
 using HHMCore.Core.Interfaces;
 using HHMCore.Core.Mappings;
@@ -106,7 +107,11 @@ builder.Services.AddScoped<IEmailService, EmailService>();
 // 7. AUTOMAPPER
 // ----------------------------------------
 builder.Services.AddAutoMapper(typeof(AuthMappingProfile));
-
+// ----------------------------------------
+// EMAIL SETTINGS
+// ----------------------------------------
+builder.Services.Configure<EmailSettings>(
+    builder.Configuration.GetSection("Email"));
 // ----------------------------------------
 // 8. FLUENT VALIDATION
 // ----------------------------------------

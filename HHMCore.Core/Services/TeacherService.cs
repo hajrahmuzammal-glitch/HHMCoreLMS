@@ -1,29 +1,38 @@
-﻿using AutoMapper;
+﻿namespace HHMCore.Core.Services;
+
+using AutoMapper;
 using HHMCore.Core.Common;
 using HHMCore.Core.DTOs.Teacher;
 using HHMCore.Core.Entities;
 using HHMCore.Core.Interfaces;
 using Microsoft.AspNetCore.Identity;
 
-namespace HHMCore.Core.Services;
-
 public class TeacherService : ITeacherService
 {
     private readonly IUnitOfWork _unitOfWork;
     private readonly IMapper _mapper;
     private readonly UserManager<AppUser> _userManager;
+    private readonly IEmailService _emailService;
 
-    public TeacherService(IUnitOfWork unitOfWork, IMapper mapper, UserManager<AppUser> userManager)
+    public TeacherService(
+        IUnitOfWork unitOfWork,
+        IMapper mapper,
+        UserManager<AppUser> userManager,
+        IEmailService emailService)
     {
         _unitOfWork = unitOfWork;
         _mapper = mapper;
         _userManager = userManager;
+        _emailService = emailService;
     }
 
-    public async Task<ApiResponse<TeacherResponseDto>> CreateAsync(CreateTeacherDto dto, string createdBy)
+    public async Task<ApiResponse<TeacherResponseDto>> CreateAsync(
+        CreateTeacherDto dto, string createdBy)
     {
-        var existingUser = await _userManager.FindByEmailAsync(dto.Email);
-        if (existingUser != null)
+        var normalizedEmail = dto.Email.Trim().ToLowerInvariant();
+
+        var existingUser = await _userManager.FindByEmailAsync(normalizedEmail);
+        if (existingUser is not null)
             return ApiResponse<TeacherResponseDto>.Fail("A user with this email already exists.");
 
         var cnicExists = await _unitOfWork.Teachers.ExistsAsync(t => t.Cnic == dto.Cnic);
@@ -31,36 +40,48 @@ public class TeacherService : ITeacherService
             return ApiResponse<TeacherResponseDto>.Fail("A teacher with this CNIC already exists.");
 
         var department = await _unitOfWork.Departments.GetByIdAsync(dto.DepartmentId);
-        if (department == null)
+        if (department is null)
             return ApiResponse<TeacherResponseDto>.Fail("Department not found.");
 
         var designation = await _unitOfWork.Designations.GetByIdAsync(dto.DesignationId);
-        if (designation == null)
+        if (designation is null)
             return ApiResponse<TeacherResponseDto>.Fail("Designation not found.");
 
         var allTeachers = await _unitOfWork.Teachers.GetAllAsync();
-        var nextNumber = (allTeachers.Count + 1).ToString("D4");
-        var employeeId = $"EMP-{DateTime.UtcNow.Year}-{nextNumber}";
+        var currentYear = DateTime.UtcNow.Year.ToString();
+
+        var lastNumber = allTeachers
+            .Where(t => t.EmployeeId.StartsWith($"EMP-{currentYear}-"))
+            .Select(t =>
+            {
+                var parts = t.EmployeeId.Split('-');
+                return parts.Length == 3 && int.TryParse(parts[2], out var n) ? n : 0;
+            })
+            .DefaultIfEmpty(0)
+            .Max();
+
+        var employeeId = $"EMP-{currentYear}-{(lastNumber + 1):D4}";
 
         var appUser = new AppUser
         {
-            FullName = dto.FullName,
-            Email = dto.Email,
-            UserName = dto.Email
+            FullName = dto.FullName.Trim(),
+            Email = normalizedEmail,
+            UserName = normalizedEmail
         };
 
         var userResult = await _userManager.CreateAsync(appUser, dto.Password);
         if (!userResult.Succeeded)
         {
             var errors = userResult.Errors.Select(e => e.Description).ToList();
-            return ApiResponse<TeacherResponseDto>.Fail(string.Join(", ", errors));
+            return ApiResponse<TeacherResponseDto>.Fail("Failed to create account.", errors);
         }
 
         var roleResult = await _userManager.AddToRoleAsync(appUser, "Teacher");
         if (!roleResult.Succeeded)
         {
             await _userManager.DeleteAsync(appUser);
-            return ApiResponse<TeacherResponseDto>.Fail("Failed to assign Teacher role.");
+            return ApiResponse<TeacherResponseDto>.Fail(
+                "The 'Teacher' role does not exist. An Admin must create it first via POST /api/roles.");
         }
 
         try
@@ -69,13 +90,13 @@ public class TeacherService : ITeacherService
             {
                 UserId = appUser.Id,
                 EmployeeId = employeeId,
-                Cnic = dto.Cnic,
+                Cnic = dto.Cnic.Trim(),
                 DesignationId = dto.DesignationId,
                 Gender = dto.Gender,
                 Salary = dto.Salary,
                 DepartmentId = dto.DepartmentId,
-                PhoneNumber = dto.PhoneNumber,
-                Address = dto.Address,
+                PhoneNumber = dto.PhoneNumber.Trim(),
+                Address = dto.Address?.Trim(),
                 DateOfBirth = dto.DateOfBirth,
                 CreatedBy = createdBy,
                 CreatedAt = DateTime.UtcNow
@@ -84,10 +105,18 @@ public class TeacherService : ITeacherService
             await _unitOfWork.Teachers.AddAsync(teacher);
             await _unitOfWork.SaveChangesAsync();
 
+            // Fire-and-forget — email failure must never roll back a successful creation
+            _ = _emailService.SendCredentialsAsync(
+                appUser.Email!,
+                appUser.FullName,
+                appUser.Email!,
+                dto.Password,
+                "Teacher");
+
             var created = await _unitOfWork.Teachers
                 .GetByIdWithIncludesAsync(teacher.Id, t => t.User, t => t.Department, t => t.Designation);
 
-            if (created == null)
+            if (created is null)
                 return ApiResponse<TeacherResponseDto>.Fail("Teacher created but could not be retrieved.");
 
             var response = _mapper.Map<TeacherResponseDto>(created);
@@ -114,7 +143,7 @@ public class TeacherService : ITeacherService
         var teacher = await _unitOfWork.Teachers
             .GetByIdWithIncludesAsync(id, t => t.User, t => t.Department, t => t.Designation);
 
-        if (teacher == null)
+        if (teacher is null)
             return ApiResponse<TeacherResponseDto>.Fail("Teacher not found.");
 
         var response = _mapper.Map<TeacherResponseDto>(teacher);
@@ -124,41 +153,47 @@ public class TeacherService : ITeacherService
     public async Task<ApiResponse<TeacherResponseDto>> GetMeAsync(string userId)
     {
         var teacher = await _unitOfWork.Teachers
-            .FindOneWithIncludesAsync(t => t.UserId == userId, t => t.User, t => t.Department, t => t.Designation);
+            .FindOneWithIncludesAsync(
+                t => t.UserId == userId,
+                t => t.User, t => t.Department, t => t.Designation);
 
-        if (teacher == null)
+        if (teacher is null)
             return ApiResponse<TeacherResponseDto>.Fail("Teacher profile not found.");
 
         var response = _mapper.Map<TeacherResponseDto>(teacher);
         return ApiResponse<TeacherResponseDto>.Ok(response, "Profile retrieved successfully.");
     }
+
     public async Task<ApiResponse<IReadOnlyList<TeacherResponseDto>>> GetByDepartmentAsync(Guid departmentId)
     {
         var department = await _unitOfWork.Departments.GetByIdAsync(departmentId);
-        if (department == null)
+        if (department is null)
             return ApiResponse<IReadOnlyList<TeacherResponseDto>>.Fail("Department not found.");
 
         var teachers = await _unitOfWork.Teachers
-            .GetAllWithIncludesAsync(t => t.User, t => t.Department, t => t.Designation);
+            .FindWithIncludesAsync(
+                t => t.DepartmentId == departmentId,
+                t => t.User, t => t.Department, t => t.Designation);
 
-        var filtered = teachers
-            .Where(t => t.DepartmentId == departmentId)
-            .ToList();
-
-        var response = _mapper.Map<IReadOnlyList<TeacherResponseDto>>(filtered);
+        var response = _mapper.Map<IReadOnlyList<TeacherResponseDto>>(teachers);
         return ApiResponse<IReadOnlyList<TeacherResponseDto>>.Ok(response, "Teachers retrieved successfully.");
     }
-    public async Task<ApiResponse<TeacherResponseDto>> UpdateMyProfileAsync(string userId, UpdateTeacherProfileDto dto)
+
+    public async Task<ApiResponse<TeacherResponseDto>> UpdateMyProfileAsync(
+        string userId, UpdateTeacherProfileDto dto)
     {
         var teacher = await _unitOfWork.Teachers
-            .FindOneWithIncludesAsync(t => t.UserId == userId, t => t.User, t => t.Department, t => t.Designation);
+            .FindOneWithIncludesAsync(
+                t => t.UserId == userId,
+                t => t.User, t => t.Department, t => t.Designation);
 
         if (teacher is null)
             return ApiResponse<TeacherResponseDto>.Fail("Teacher profile not found.");
 
-        teacher.PhoneNumber = dto.PhoneNumber ?? teacher.PhoneNumber;
-        teacher.Address = dto.Address ?? teacher.Address;
-        teacher.Qualification = dto.Qualification ?? teacher.Qualification;
+        teacher.PhoneNumber = string.IsNullOrWhiteSpace(dto.PhoneNumber) ? teacher.PhoneNumber : dto.PhoneNumber.Trim();
+        teacher.Address = string.IsNullOrWhiteSpace(dto.Address) ? teacher.Address : dto.Address.Trim();
+        teacher.Qualification = string.IsNullOrWhiteSpace(dto.Qualification) ? teacher.Qualification : dto.Qualification.Trim();
+
         teacher.UpdatedAt = DateTime.UtcNow;
         teacher.UpdatedBy = userId;
 
@@ -168,35 +203,41 @@ public class TeacherService : ITeacherService
         var response = _mapper.Map<TeacherResponseDto>(teacher);
         return ApiResponse<TeacherResponseDto>.Ok(response, "Profile updated successfully.");
     }
-    public async Task<ApiResponse<TeacherResponseDto>> UpdateAsync(UpdateTeacherDto dto, string updatedBy)
+
+    public async Task<ApiResponse<TeacherResponseDto>> UpdateAsync(
+        UpdateTeacherDto dto, string updatedBy)
     {
         var teacher = await _unitOfWork.Teachers
             .GetByIdWithIncludesAsync(dto.Id, t => t.User, t => t.Department, t => t.Designation);
 
-        if (teacher == null)
+        if (teacher is null)
             return ApiResponse<TeacherResponseDto>.Fail("Teacher not found.");
 
         if (dto.DesignationId.HasValue)
         {
             var designation = await _unitOfWork.Designations.GetByIdAsync(dto.DesignationId.Value);
-            if (designation == null)
+            if (designation is null)
                 return ApiResponse<TeacherResponseDto>.Fail("Designation not found.");
         }
 
-        var appUser = await _userManager.FindByIdAsync(teacher.UserId);
-        if (appUser != null && !string.IsNullOrEmpty(dto.FullName))
+        if (!string.IsNullOrWhiteSpace(dto.FullName))
         {
-            appUser.FullName = dto.FullName;
-            await _userManager.UpdateAsync(appUser);
+            var appUser = await _userManager.FindByIdAsync(teacher.UserId);
+            if (appUser is not null)
+            {
+                appUser.FullName = dto.FullName.Trim();
+                await _userManager.UpdateAsync(appUser);
+            }
         }
 
         teacher.DesignationId = dto.DesignationId ?? teacher.DesignationId;
         teacher.Gender = dto.Gender ?? teacher.Gender;
         teacher.Salary = dto.Salary ?? teacher.Salary;
         teacher.DepartmentId = dto.DepartmentId ?? teacher.DepartmentId;
-        teacher.PhoneNumber = dto.PhoneNumber ?? teacher.PhoneNumber;
-        teacher.Address = dto.Address ?? teacher.Address;
         teacher.DateOfBirth = dto.DateOfBirth ?? teacher.DateOfBirth;
+        teacher.PhoneNumber = string.IsNullOrWhiteSpace(dto.PhoneNumber) ? teacher.PhoneNumber : dto.PhoneNumber.Trim();
+        teacher.Address = string.IsNullOrWhiteSpace(dto.Address) ? teacher.Address : dto.Address.Trim();
+
         teacher.UpdatedBy = updatedBy;
         teacher.UpdatedAt = DateTime.UtcNow;
 
@@ -206,18 +247,21 @@ public class TeacherService : ITeacherService
         var updated = await _unitOfWork.Teachers
             .GetByIdWithIncludesAsync(teacher.Id, t => t.User, t => t.Department, t => t.Designation);
 
-        if (updated == null)
+        if (updated is null)
             return ApiResponse<TeacherResponseDto>.Fail("Teacher updated but could not be retrieved.");
 
         var response = _mapper.Map<TeacherResponseDto>(updated);
         return ApiResponse<TeacherResponseDto>.Ok(response, "Teacher updated successfully.");
     }
 
-    public async Task<ApiResponse> DeleteAsync(Guid id)
+    public async Task<ApiResponse> DeleteAsync(Guid id, string deletedBy)
     {
         var teacher = await _unitOfWork.Teachers.GetByIdAsync(id);
-        if (teacher == null)
+        if (teacher is null)
             return ApiResponse.Fail("Teacher not found.");
+
+        teacher.UpdatedAt = DateTime.UtcNow;
+        teacher.UpdatedBy = deletedBy;
 
         _unitOfWork.Teachers.Delete(teacher);
         await _unitOfWork.SaveChangesAsync();

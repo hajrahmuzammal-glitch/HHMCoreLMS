@@ -52,10 +52,10 @@ namespace HHMCore.WebAPI.Controllers
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Update(Guid id, [FromBody] UpdateStudentDto dto)
         {
-            if (id != dto.Id)
-                return BadRequest(ApiResponse.Fail("ID in URL does not match ID in request body."));
+            //if (id != dto.Id)
+            //    return BadRequest(ApiResponse.Fail("ID in URL does not match ID in request body."));
 
-            var result = await _studentService.UpdateAsync(dto, GetCurrentUserEmail());
+            var result = await _studentService.UpdateAsync(id,dto, GetCurrentUserEmail());
             return result.Success ? Ok(result) : BadRequest(result);
         }
 
@@ -63,7 +63,8 @@ namespace HHMCore.WebAPI.Controllers
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Delete(Guid id)
         {
-            var result = await _studentService.DeleteAsync(id);
+            var deletedBy = User.FindFirstValue(ClaimTypes.Email) ?? "system";
+            var result = await _studentService.DeleteAsync(id, deletedBy);
             return result.Success ? Ok(result) : NotFound(result);
         }
         [HttpGet("me")]

@@ -17,7 +17,7 @@ namespace HHMCore.Core.Interfaces
         Task<ApiResponse<IReadOnlyList<TeacherResponseDto>>> GetByDepartmentAsync(Guid departmentId);
         Task<ApiResponse<TeacherResponseDto>> UpdateAsync(UpdateTeacherDto dto, string updatedBy);
         Task<ApiResponse<TeacherResponseDto>> UpdateMyProfileAsync(string userId, UpdateTeacherProfileDto dto);
-        Task<ApiResponse> DeleteAsync(Guid id);
+        Task<ApiResponse> DeleteAsync(Guid id, string deletedBy);
 
     }
 }
