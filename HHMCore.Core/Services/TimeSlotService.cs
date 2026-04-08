@@ -72,6 +72,9 @@ public class TimeSlotService : ITimeSlotService
         var newStart = dto.StartTime ?? slot.StartTime;
         var newEnd = dto.EndTime ?? slot.EndTime;
 
+        if (newEnd <= newStart)
+            return ApiResponse<TimeSlotResponseDto>.Fail("End time must be after start time.");
+        
         var duplicate = await _unitOfWork.TimeSlots.ExistsAsync(
             ts => ts.Id != id &&
                   ts.Days == newDays &&
