@@ -14,6 +14,7 @@ namespace HHMCore.Core.Interfaces
         IGenericRepository<Designation> Designations { get; }
         IGenericRepository<CourseAssignment> CourseAssignments { get; }
         IGenericRepository<Room> Rooms { get; }
+        IGenericRepository<Building> Buildings { get; }
         IGenericRepository<TimeSlot> TimeSlots { get; }
         IGenericRepository<Enrollment> Enrollments { get; }
         IGenericRepository<Attendance> Attendances { get; }
