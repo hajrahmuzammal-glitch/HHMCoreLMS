@@ -1,130 +1,136 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.IdentityModel.Tokens.Jwt;
-using System.Security.Claims;
+﻿using HHMCore.Core.Common;
 using HHMCore.Core.DTOs.Auth;
+using HHMCore.Core.Entities;
 using HHMCore.Core.Interfaces;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
-using HHMCore.Core.Entities;
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
+using System.Text;
 
 namespace HHMCore.Core.Services
 {
     public class AuthService : IAuthService
     {
         private readonly UserManager<AppUser> _userManager;
-        private readonly RoleManager<IdentityRole> _roleManager;
-        private readonly IConfiguration _configuration;
+        private readonly IConfiguration _config;
 
-        public AuthService(
-            UserManager<AppUser> userManager,
-            RoleManager<IdentityRole> roleManager,
-            IConfiguration configuration)
+        public AuthService(UserManager<AppUser> userManager, IConfiguration config)
         {
             _userManager = userManager;
-            _roleManager = roleManager;
-            _configuration = configuration;
+            _config = config;
         }
 
-        public async Task<AuthResponseDto> RegisterAsync(RegisterDto dto)
+        public async Task<ApiResponse<AuthResponseDto>> RegisterAsync(RegisterDto dto)
         {
-            // Check if a user with this email already exists
-            var existingUser = await _userManager.FindByEmailAsync(dto.Email);
-            if (existingUser != null)
-                throw new Exception("A user with this email already exists.");
+            // Normalize email — "Admin@Test.COM" and "admin@test.com" must be treated as one
+            var normalizedEmail = dto.Email.Trim().ToLowerInvariant();
 
-            // Create a new IdentityUser object (this is NOT saved yet)
-            var user = new AppUser
+            var existingUser = await _userManager.FindByEmailAsync(normalizedEmail);
+            if (existingUser != null)
+                return ApiResponse<AuthResponseDto>.Fail("This email is already registered.");
+
+            var appUser = new AppUser
             {
-                UserName = dto.Email,
-                Email = dto.Email,
-                FullName = dto.FullName
+                FullName = dto.FullName.Trim(),
+                Email = normalizedEmail,
+                UserName = normalizedEmail
             };
 
-            // CreateAsync saves the user AND hashes the password automatically
-            var result = await _userManager.CreateAsync(user, dto.Password);
-            if (!result.Succeeded)
+            var createResult = await _userManager.CreateAsync(appUser, dto.Password);
+            if (!createResult.Succeeded)
             {
-                var errors = string.Join(", ", result.Errors.Select(e => e.Description));
-                throw new Exception($"Registration failed: {errors}");
+                var errors = createResult.Errors.Select(e => e.Description).ToList();
+                return ApiResponse<AuthResponseDto>.Fail("Registration failed.", errors);
             }
 
-            // Make sure the role exists before assigning it
-            if (!await _roleManager.RoleExistsAsync(dto.Role))
-                throw new Exception($"Role '{dto.Role}' does not exist.");
-
-            // Assign the role to the user
-            await _userManager.AddToRoleAsync(user, dto.Role);
-
-            // Generate and return the JWT token
-            return await GenerateAuthResponseAsync(user);
-        }
-
-        public async Task<AuthResponseDto> LoginAsync(LoginDto dto)
-        {
-            // Find the user by email
-            var user = await _userManager.FindByEmailAsync(dto.Email);
-            if (user == null)
-                throw new Exception("Invalid email or password.");
-
-            // CheckPasswordAsync compares the input against the stored hash
-            var passwordValid = await _userManager.CheckPasswordAsync(user, dto.Password);
-            if (!passwordValid)
-                throw new Exception("Invalid email or password.");
-
-            // Generate and return the JWT token
-            return await GenerateAuthResponseAsync(user);
-        }
-
-        // Private helper — builds the JWT token and returns AuthResponseDto
-        private async Task<AuthResponseDto> GenerateAuthResponseAsync(AppUser user)
-        {
-            // Get the roles assigned to this user
-            var roles = await _userManager.GetRolesAsync(user);
-
-            // Claims are pieces of information packed inside the token
-            var claims = new List<Claim>
+            // Try to assign the role — if the role does not exist in the DB, this returns a failure
+            var roleResult = await _userManager.AddToRoleAsync(appUser, dto.Role);
+            if (!roleResult.Succeeded)
             {
-                new Claim(ClaimTypes.NameIdentifier, user.Id),
-                new Claim(ClaimTypes.Email, user.Email!),
-                new Claim(ClaimTypes.Name, user.UserName!),
-                new Claim(ClaimTypes.Role, roles.FirstOrDefault() ?? string.Empty)
+                // Clean up the Identity user so we do not leave an orphan account
+                await _userManager.DeleteAsync(appUser);
+                return ApiResponse<AuthResponseDto>.Fail(
+                    $"Role '{dto.Role}' does not exist. An Admin must create it first.");
+            }
+
+            var token = await GenerateTokenAsync(appUser);
+            var duration = int.Parse(_config["JWT:DurationInMinutes"]!);
+
+            var response = new AuthResponseDto
+            {
+                Token = token,
+                ExpiresAt = DateTime.UtcNow.AddMinutes(duration),
+                FullName = appUser.FullName,
+                Email = appUser.Email!,
+                Role = dto.Role
             };
 
-            // Read JWT settings from appsettings.json
-            var key = _configuration["JWT:Key"]!;
-            var issuer = _configuration["JWT:Issuer"]!;
-            var audience = _configuration["JWT:Audience"]!;
-            var duration = int.Parse(_configuration["JWT:DurationInMinutes"]!);
+            return ApiResponse<AuthResponseDto>.Ok(response, "Registration successful.");
+        }
 
-            // Create the signing key using our secret
-            var signingKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(key));
-            var credentials = new SigningCredentials(signingKey, SecurityAlgorithms.HmacSha256);
+        public async Task<ApiResponse<AuthResponseDto>> LoginAsync(LoginDto dto)
+        {
+            // Normalize before lookup — matches how we stored it
+            var normalizedEmail = dto.Email.Trim().ToLowerInvariant();
 
-            // Build the token
-            var token = new JwtSecurityToken(
-                issuer: issuer,
-                audience: audience,
-                claims: claims,
-                expires: DateTime.UtcNow.AddMinutes(duration),
-                signingCredentials: credentials
-            );
+            var user = await _userManager.FindByEmailAsync(normalizedEmail);
 
-            // Serialize the token object into the actual string (eyJ...)
-            var tokenString = new JwtSecurityTokenHandler().WriteToken(token);
+            // Check null separately — avoids the null reference warning on CheckPasswordAsync
+            if (user is null)
+                return ApiResponse<AuthResponseDto>.Fail("Invalid email or password.");
 
-            return new AuthResponseDto
+            var passwordValid = await _userManager.CheckPasswordAsync(user, dto.Password);
+            if (!passwordValid)
+                return ApiResponse<AuthResponseDto>.Fail("Invalid email or password.");
+
+            // GetRolesAsync is safe here — user is confirmed non-null above
+            var roles = await _userManager.GetRolesAsync(user);
+            var role = roles.FirstOrDefault() ?? string.Empty;
+
+            var token = await GenerateTokenAsync(user);
+            var duration = int.Parse(_config["JWT:DurationInMinutes"]!);
+
+            var response = new AuthResponseDto
             {
-                Token = tokenString,
+                Token = token,
                 ExpiresAt = DateTime.UtcNow.AddMinutes(duration),
                 FullName = user.FullName,
                 Email = user.Email!,
-                Role = roles.FirstOrDefault() ?? string.Empty
+                Role = role
             };
+
+            return ApiResponse<AuthResponseDto>.Ok(response, "Login successful.");
+        }
+
+        private async Task<string> GenerateTokenAsync(AppUser user)
+        {
+            var roles = await _userManager.GetRolesAsync(user);
+            var role = roles.FirstOrDefault() ?? string.Empty;
+
+            var claims = new List<Claim>
+            {
+                new(ClaimTypes.NameIdentifier, user.Id),
+                new(ClaimTypes.Email,          user.Email!),
+                new(ClaimTypes.Name,           user.FullName),
+                new(ClaimTypes.Role,           role)
+            };
+
+            var keyBytes = Encoding.UTF8.GetBytes(_config["JWT:Key"]!);
+            var key = new SymmetricSecurityKey(keyBytes);
+            var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
+            var duration = int.Parse(_config["JWT:DurationInMinutes"]!);
+
+            var token = new JwtSecurityToken(
+                issuer: _config["JWT:Issuer"],
+                audience: _config["JWT:Audience"],
+                claims: claims,
+                expires: DateTime.UtcNow.AddMinutes(duration),
+                signingCredentials: creds
+            );
+
+            return new JwtSecurityTokenHandler().WriteToken(token);
         }
     }
 }
