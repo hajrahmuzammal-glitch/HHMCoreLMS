@@ -4,7 +4,9 @@ public class RoomResponseDto
 {
     public Guid Id { get; set; }
     public string RoomNumber { get; set; } = string.Empty;
-    public string Building { get; set; } = string.Empty;
+    public Guid BuildingId { get; set; }
+    public string BuildingName { get; set; } = string.Empty;
+    public string? BuildingCode { get; set; }
     public int Capacity { get; set; }
     public string RoomType { get; set; } = string.Empty;
     public bool IsActive { get; set; }

@@ -21,6 +21,7 @@ public class RoomController : ControllerBase
     private string GetCurrentUserEmail() =>
         User.FindFirstValue(ClaimTypes.Email) ?? "system";
 
+    // POST /api/rooms — Admin only
     [HttpPost]
     [Authorize(Roles = "Admin")]
     public async Task<IActionResult> Create([FromBody] CreateRoomDto dto)
@@ -29,6 +30,7 @@ public class RoomController : ControllerBase
         return result.Success ? Ok(result) : BadRequest(result);
     }
 
+    // POST /api/rooms/bulk — Admin only
     [HttpPost("bulk")]
     [Authorize(Roles = "Admin")]
     public async Task<IActionResult> CreateBulk([FromBody] List<CreateRoomDto> dtos)
@@ -38,7 +40,7 @@ public class RoomController : ControllerBase
     }
 
     [HttpGet]
-    [Authorize(Roles = "Admin")]
+    [Authorize(Roles = "Admin,Teacher")]
     public async Task<IActionResult> GetAll()
     {
         var result = await _roomService.GetAllAsync();
@@ -46,7 +48,7 @@ public class RoomController : ControllerBase
     }
 
     [HttpGet("{id:guid}")]
-    [Authorize(Roles = "Admin")]
+    [Authorize(Roles = "Admin,Teacher")]
     public async Task<IActionResult> GetById(Guid id)
     {
         var result = await _roomService.GetByIdAsync(id);
@@ -54,13 +56,14 @@ public class RoomController : ControllerBase
     }
 
     [HttpGet("available")]
-    [Authorize(Roles = "Admin")]
+    [Authorize(Roles = "Admin,Teacher")]
     public async Task<IActionResult> GetAvailable([FromQuery] Guid timeSlotId, [FromQuery] Guid semesterId)
     {
         var result = await _roomService.GetAvailableRoomsAsync(timeSlotId, semesterId);
         return Ok(result);
     }
 
+    // PUT /api/rooms/{id} — Admin only
     [HttpPut("{id:guid}")]
     [Authorize(Roles = "Admin")]
     public async Task<IActionResult> Update(Guid id, [FromBody] UpdateRoomDto dto)
@@ -74,6 +77,6 @@ public class RoomController : ControllerBase
     public async Task<IActionResult> Delete(Guid id)
     {
         var result = await _roomService.DeleteAsync(id, GetCurrentUserEmail());
-        return result.Success ? Ok(result) : BadRequest(result);
+        return result.Success ? Ok(result) : NotFound(result);
     }
 }
