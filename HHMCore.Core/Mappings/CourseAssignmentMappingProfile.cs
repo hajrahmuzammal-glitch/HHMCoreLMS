@@ -29,9 +29,9 @@ public class CourseAssignmentMappingProfile : Profile
                 opt => opt.MapFrom(src =>
                     src.Room != null ? src.Room.RoomNumber : string.Empty))
             .ForMember(dest => dest.Building,
-                opt => opt.MapFrom(src => 
-                    src.Room != null ? src.Room.Building : string.Empty))
-            .ForMember(dest => dest.TimeSlotLabel,
+                opt => opt.MapFrom(src =>
+                   src.Room != null && src.Room.Building != null ? src.Room.Building.Name : string.Empty))
+           .ForMember(dest => dest.TimeSlotLabel,
                 opt => opt.MapFrom(src =>
                     src.TimeSlot != null ? src.TimeSlot.Label : string.Empty));
 

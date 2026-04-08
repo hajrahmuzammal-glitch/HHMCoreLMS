@@ -60,7 +60,8 @@ public class CourseController : ControllerBase
     [Authorize(Roles = "Admin")]
     public async Task<IActionResult> Delete(Guid id)
     {
-        var result = await _courseService.DeleteAsync(id);
+        var deletedBy = User.FindFirstValue(ClaimTypes.Email) ?? "system";
+        var result = await _courseService.DeleteAsync(id, deletedBy);
         return result.Success ? Ok(result) : NotFound(result);
     }
 
