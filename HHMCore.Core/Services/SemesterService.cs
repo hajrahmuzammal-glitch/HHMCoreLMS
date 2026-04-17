@@ -72,39 +72,45 @@ public class SemesterService : ISemesterService
     }
 
     public async Task<ApiResponse<SemesterResponseDto>> UpdateAsync(
-        UpdateSemesterDto dto, string updatedBy)
+     Guid id,
+     UpdateSemesterDto dto,
+     string updatedBy)
     {
-        var semester = await _unitOfWork.Semesters.GetByIdAsync(dto.Id);
+        var semester = await _unitOfWork.Semesters.GetByIdAsync(id);
         if (semester == null)
             return ApiResponse<SemesterResponseDto>.Fail("Semester not found.");
 
         if (!string.IsNullOrWhiteSpace(dto.Name) &&
-            !string.Equals(dto.Name.Trim(), semester.Name,
-                StringComparison.OrdinalIgnoreCase))
+            !string.Equals(dto.Name.Trim(), semester.Name, StringComparison.OrdinalIgnoreCase))
         {
             var nameExists = await _unitOfWork.Semesters.ExistsAsync(
-                s => s.Name.ToLower() == dto.Name.ToLower().Trim()
-                  && s.Id != dto.Id);
-
+                s => s.Name.ToLower() == dto.Name.ToLower() && s.Id != id);
             if (nameExists)
                 return ApiResponse<SemesterResponseDto>.Fail(
-                    "A semester with this name already exists.");
+                    $"A semester with the name '{dto.Name}' already exists.");
+
+            semester.Name = dto.Name.Trim();
         }
 
-        semester.Name = string.IsNullOrWhiteSpace(dto.Name)
-            ? semester.Name : dto.Name.Trim();
-        semester.StartDate = dto.StartDate ?? semester.StartDate;
-        semester.EndDate = dto.EndDate ?? semester.EndDate;
+        // Resolve final dates before validating
+        var finalStart = dto.StartDate ?? semester.StartDate;
+        var finalEnd = dto.EndDate ?? semester.EndDate;
+
+        if (finalEnd <= finalStart)
+            return ApiResponse<SemesterResponseDto>.Fail(
+                "End date must be after start date.");
+
+        semester.StartDate = finalStart;
+        semester.EndDate = finalEnd;
         semester.UpdatedAt = DateTime.UtcNow;
         semester.UpdatedBy = updatedBy;
 
         _unitOfWork.Semesters.Update(semester);
         await _unitOfWork.SaveChangesAsync();
 
-        var response = _mapper.Map<SemesterResponseDto>(semester);
-        return ApiResponse<SemesterResponseDto>.Ok(response, "Semester updated successfully.");
+        var responseDto = _mapper.Map<SemesterResponseDto>(semester);
+        return ApiResponse<SemesterResponseDto>.Ok(responseDto, "Semester updated successfully.");
     }
-
     public async Task<ApiResponse<SemesterResponseDto>> ActivateAsync(
         Guid id, string updatedBy)
     {

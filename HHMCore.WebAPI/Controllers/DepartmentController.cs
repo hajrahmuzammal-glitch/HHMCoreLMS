@@ -49,11 +49,7 @@ public class DepartmentController : ControllerBase
     [Authorize(Roles = "Admin")]
     public async Task<IActionResult> Update(Guid id, [FromBody] UpdateDepartmentDto dto)
     {
-        // Make sure the ID in the URL matches the ID in the body
-        if (id != dto.Id)
-            return BadRequest("ID in URL does not match ID in body.");
-
-        var result = await _departmentService.UpdateAsync(dto, GetCurrentUser());
+       var result = await _departmentService.UpdateAsync(id,dto, GetCurrentUser());
         return result.Success ? Ok(result) : BadRequest(result);
     }
 

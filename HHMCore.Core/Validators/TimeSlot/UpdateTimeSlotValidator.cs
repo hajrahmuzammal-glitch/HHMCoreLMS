@@ -7,10 +7,6 @@ public class UpdateTimeSlotValidator : AbstractValidator<UpdateTimeSlotDto>
 {
     public UpdateTimeSlotValidator()
     {
-        RuleFor(x => x.Id)
-            .Must(id => id != Guid.Empty)
-                .WithMessage("A valid Time Slot ID is required.");
-
         RuleFor(x => x.Days)
             .Must(d => d != 0)
                 .WithMessage("At least one day must be selected.")

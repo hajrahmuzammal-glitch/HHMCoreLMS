@@ -77,6 +77,8 @@ public class RoomController : ControllerBase
     public async Task<IActionResult> Delete(Guid id)
     {
         var result = await _roomService.DeleteAsync(id, GetCurrentUserEmail());
-        return result.Success ? Ok(result) : NotFound(result);
+        if (!result.Success)
+            return BadRequest(result);
+        return Ok(result);
     }
 }

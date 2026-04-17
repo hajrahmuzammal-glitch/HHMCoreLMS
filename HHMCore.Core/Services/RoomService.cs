@@ -123,52 +123,58 @@ public class RoomService : IRoomService
     }
 
     public async Task<ApiResponse<RoomResponseDto>> UpdateAsync(
-        Guid id, UpdateRoomDto dto, string updatedBy)
+    Guid id,
+    UpdateRoomDto dto,
+    string updatedBy)
     {
-        var room = await _unitOfWork.Rooms.GetByIdAsync(id);
-        if (room is null)
+        // Step 1 — Fetch with Building included (needed for response mapping)
+        var room = await _unitOfWork.Rooms.GetByIdWithIncludesAsync(id, r => r.Building);
+        if (room == null)
             return ApiResponse<RoomResponseDto>.Fail("Room not found.");
 
+        // Step 2 — If a new BuildingId was sent, verify that building exists
         if (dto.BuildingId.HasValue)
         {
             var building = await _unitOfWork.Buildings.GetByIdAsync(dto.BuildingId.Value);
-            if (building is null)
+            if (building == null)
                 return ApiResponse<RoomResponseDto>.Fail("Building not found.");
-            room.BuildingId = dto.BuildingId.Value;
         }
-        if (!string.IsNullOrWhiteSpace(dto.RoomNumber) || (dto.BuildingId.HasValue && dto.BuildingId != Guid.Empty))
+
+        // Step 3 — Duplicate room number check
+        // Use the incoming BuildingId if provided, otherwise keep the current one
+        if (!string.IsNullOrWhiteSpace(dto.RoomNumber))
         {
-            var newRoomNumber = string.IsNullOrWhiteSpace(dto.RoomNumber) ? room.RoomNumber : dto.RoomNumber;
-            var newBuildingId = (dto.BuildingId.HasValue && dto.BuildingId != Guid.Empty)
-                ? dto.BuildingId.Value
-                : room.BuildingId;
-
-            var duplicate = await _unitOfWork.Rooms.ExistsAsync(
-                r => r.Id != id &&
-                     r.RoomNumber.ToUpper() == newRoomNumber.ToUpper() &&
-                     r.BuildingId == newBuildingId);
-
-            if (duplicate)
+            var targetBuildingId = dto.BuildingId ?? room.BuildingId;
+            var roomExists = await _unitOfWork.Rooms.ExistsAsync(
+                r => r.RoomNumber.ToLower() == dto.RoomNumber.ToLower()
+                  && r.BuildingId == targetBuildingId
+                  && r.Id != id);
+            if (roomExists)
                 return ApiResponse<RoomResponseDto>.Fail(
-                    $"Room '{newRoomNumber}' in this building already exists.");
+                    $"Room '{dto.RoomNumber}' already exists in this building.");
+
+            room.RoomNumber = dto.RoomNumber.Trim();
         }
 
-        room.RoomNumber = string.IsNullOrWhiteSpace(dto.RoomNumber) ? room.RoomNumber : dto.RoomNumber.Trim();
-        room.BuildingId = (dto.BuildingId.HasValue && dto.BuildingId != Guid.Empty)
-            ? dto.BuildingId.Value
-            : room.BuildingId;
+        // Step 4 — Apply only the fields that were actually sent
+        // ?? handles value types (Guid?, int?, bool?, enum?) — null means "don't change"
+        room.BuildingId = dto.BuildingId ?? room.BuildingId;
         room.Capacity = dto.Capacity ?? room.Capacity;
         room.RoomType = dto.RoomType ?? room.RoomType;
         room.IsActive = dto.IsActive ?? room.IsActive;
+
+        // Step 5 — Stamp who updated it and when
         room.UpdatedAt = DateTime.UtcNow;
         room.UpdatedBy = updatedBy;
 
+        // Step 6 — Save (no re-fetch needed — EF tracks changes on the loaded entity)
         _unitOfWork.Rooms.Update(room);
         await _unitOfWork.SaveChangesAsync();
 
-        return ApiResponse<RoomResponseDto>.Ok(_mapper.Map<RoomResponseDto>(room), "Room updated successfully.");
+        // Step 7 — Map the already-loaded entity (Building navigation is already there)
+        var responseDto = _mapper.Map<RoomResponseDto>(room);
+        return ApiResponse<RoomResponseDto>.Ok(responseDto, "Room updated successfully.");
     }
-
     public async Task<ApiResponse> DeleteAsync(Guid id, string deletedBy)
     {
         var room = await _unitOfWork.Rooms.GetByIdAsync(id);

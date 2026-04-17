@@ -56,35 +56,43 @@ public class DesignationService : IDesignationService
         return ApiResponse<DesignationResponseDto>.Ok(response, "Designation retrieved successfully.");
     }
 
-    public async Task<ApiResponse<DesignationResponseDto>> UpdateAsync(UpdateDesignationDto dto, string updatedBy)
+    public async Task<ApiResponse<DesignationResponseDto>> UpdateAsync(
+    Guid id,
+    UpdateDesignationDto dto,
+    string updatedBy)
     {
-        var designation = await _unitOfWork.Designations.GetByIdAsync(dto.Id);
+        // Step 1 — Find the existing record. If it's not there, fail immediately.
+        var designation = await _unitOfWork.Designations.GetByIdAsync(id);
         if (designation == null)
             return ApiResponse<DesignationResponseDto>.Fail("Designation not found.");
 
+        // Step 2 — Apply only the fields that were actually sent.
         if (!string.IsNullOrWhiteSpace(dto.Title))
         {
             var titleExists = await _unitOfWork.Designations.ExistsAsync(
-                x => x.Title.ToLower() == dto.Title.ToLower() && x.Id != dto.Id);
+                d => d.Title.ToLower() == dto.Title.ToLower() && d.Id != id);
             if (titleExists)
-                return ApiResponse<DesignationResponseDto>.Fail($"Designation '{dto.Title}' already exists.");
+                return ApiResponse<DesignationResponseDto>.Fail(
+                    $"Designation '{dto.Title}' already exists.");
 
-            designation.Title = dto.Title;
+            designation.Title = dto.Title.Trim();
         }
 
-        designation.Description = string.IsNullOrWhiteSpace(dto.Description)
-            ? designation.Description
-            : dto.Description;
-        designation.UpdatedBy = updatedBy;
-        designation.UpdatedAt = DateTime.UtcNow;
+        if (!string.IsNullOrWhiteSpace(dto.Description))
+            designation.Description = dto.Description.Trim();
 
+        // Step 3 — Stamp who updated it and when.
+        designation.UpdatedAt = DateTime.UtcNow;
+        designation.UpdatedBy = updatedBy;
+
+        // Step 4 — Tell EF Core this record changed, then save.
         _unitOfWork.Designations.Update(designation);
         await _unitOfWork.SaveChangesAsync();
 
-        var response = _mapper.Map<DesignationResponseDto>(designation);
-        return ApiResponse<DesignationResponseDto>.Ok(response, "Designation updated successfully.");
+        // Step 5 — Map to response DTO and return.
+        var responseDto = _mapper.Map<DesignationResponseDto>(designation);
+        return ApiResponse<DesignationResponseDto>.Ok(responseDto, "Designation updated successfully.");
     }
-
     public async Task<ApiResponse> DeleteAsync(Guid id)
     {
         var designation = await _unitOfWork.Designations.GetByIdAsync(id);

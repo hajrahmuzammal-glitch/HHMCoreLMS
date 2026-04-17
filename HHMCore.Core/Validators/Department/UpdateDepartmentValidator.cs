@@ -12,10 +12,6 @@ public class UpdateDepartmentValidator : AbstractValidator<UpdateDepartmentDto>
 {
     public UpdateDepartmentValidator()
     {
-        RuleFor(x => x.Id)
-            .Must(id => id != Guid.Empty)
-            .WithMessage("A valid Department ID is required.");
-
         RuleFor(x => x.Name)
             .NotEmpty().WithMessage("Department name cannot be empty.")
             .MaximumLength(100).WithMessage("Name cannot exceed 100 characters.")

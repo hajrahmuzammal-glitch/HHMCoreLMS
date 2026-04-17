@@ -62,33 +62,61 @@ public class DepartmentService : IDepartmentService
         return ApiResponse<IReadOnlyList<DepartmentResponseDto>>.Ok(response);
     }
 
-    public async Task<ApiResponse<DepartmentResponseDto>> UpdateAsync(UpdateDepartmentDto dto, string updatedBy)
+
+    public async Task<ApiResponse<DepartmentResponseDto>> UpdateAsync(
+        Guid id,
+        UpdateDepartmentDto dto,
+        string updatedBy)
     {
-        var department = await _unitOfWork.Departments.GetByIdAsync(dto.Id);
+        // Step 1 — Find the existing record. If it's not there, fail immediately.
+        var department = await _unitOfWork.Departments.GetByIdAsync(id);
         if (department == null)
             return ApiResponse<DepartmentResponseDto>.Fail("Department not found.");
 
-        if (!string.IsNullOrWhiteSpace(dto.Code))
-        {
-            var existing = await _unitOfWork.Departments
-                .FindAsync(x => x.Code == dto.Code.ToUpper() && x.Id != dto.Id);
-            if (existing.Any())
-                return ApiResponse<DepartmentResponseDto>.Fail("Another department with this code already exists.");
+        // Step 2 — Apply only the fields that were actually sent.
+        // IsNullOrWhiteSpace catches null, "", and "   " — all three mean "don't change it."
+        // ?? is used for value types (bool, int, Guid) which cannot be an empty string.
 
-            department.Code = dto.Code.ToUpper();
+        if (!string.IsNullOrWhiteSpace(dto.Name))
+        {
+            // Check for duplicate name (excluding this record itself)
+            var nameExists = await _unitOfWork.Departments.ExistsAsync(
+                d => d.Name.ToLower() == dto.Name.ToLower() && d.Id != id);
+            if (nameExists)
+                return ApiResponse<DepartmentResponseDto>.Fail(
+                    "A department with this name already exists.");
+
+            department.Name = dto.Name.Trim();
         }
 
-        department.Name = string.IsNullOrWhiteSpace(dto.Name) ? department.Name : dto.Name;
-        department.Description = string.IsNullOrWhiteSpace(dto.Description) ? department.Description : dto.Description;
+        if (!string.IsNullOrWhiteSpace(dto.Code))
+        {
+            var codeExists = await _unitOfWork.Departments.ExistsAsync(
+                d => d.Code.ToUpper() == dto.Code.ToUpper() && d.Id != id);
+            if (codeExists)
+                return ApiResponse<DepartmentResponseDto>.Fail(
+                    "A department with this code already exists.");
+
+            department.Code = dto.Code.ToUpper().Trim();
+        }
+
+        if (!string.IsNullOrWhiteSpace(dto.Description))
+            department.Description = dto.Description.Trim();
+
+        // bool? — use ?? because bool cannot be empty string
         department.IsActive = dto.IsActive ?? department.IsActive;
+
+        // Step 3 — Stamp who updated it and when
         department.UpdatedAt = DateTime.UtcNow;
         department.UpdatedBy = updatedBy;
 
+        // Step 4 — Tell EF Core this record changed, then save
         _unitOfWork.Departments.Update(department);
         await _unitOfWork.SaveChangesAsync();
 
-        var response = _mapper.Map<DepartmentResponseDto>(department);
-        return ApiResponse<DepartmentResponseDto>.Ok(response, "Department updated successfully.");
+        // Step 5 — Map to response DTO and return
+        var responseDto = _mapper.Map<DepartmentResponseDto>(department);
+        return ApiResponse<DepartmentResponseDto>.Ok(responseDto, "Department updated successfully.");
     }
     public async Task<ApiResponse> DeleteAsync(Guid id)
     {

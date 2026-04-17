@@ -62,41 +62,51 @@ public class TimeSlotService : ITimeSlotService
         return ApiResponse<TimeSlotResponseDto>.Ok(_mapper.Map<TimeSlotResponseDto>(slot), "Time slot fetched.");
     }
 
-    public async Task<ApiResponse<TimeSlotResponseDto>> UpdateAsync(Guid id, UpdateTimeSlotDto dto, string updatedBy)
+    public async Task<ApiResponse<TimeSlotResponseDto>> UpdateAsync(
+     Guid id,
+     UpdateTimeSlotDto dto,
+     string updatedBy)
     {
-        var slot = await _unitOfWork.TimeSlots.GetByIdAsync(id);
-        if (slot is null)
+        var timeSlot = await _unitOfWork.TimeSlots.GetByIdAsync(id);
+        if (timeSlot == null)
             return ApiResponse<TimeSlotResponseDto>.Fail("Time slot not found.");
 
-        var newDays = dto.Days ?? slot.Days;
-        var newStart = dto.StartTime ?? slot.StartTime;
-        var newEnd = dto.EndTime ?? slot.EndTime;
+        // Work out the final values before comparing them
+        var finalDays = dto.Days ?? timeSlot.Days;
+        var finalStart = dto.StartTime ?? timeSlot.StartTime;
+        var finalEnd = dto.EndTime ?? timeSlot.EndTime;
 
-        if (newEnd <= newStart)
-            return ApiResponse<TimeSlotResponseDto>.Fail("End time must be after start time.");
-        
+        // End time must come after start time
+        if (finalEnd <= finalStart)
+            return ApiResponse<TimeSlotResponseDto>.Fail(
+                "End time must be after start time.");
+
+        // Check for a duplicate time slot (same days + same times, different record)
         var duplicate = await _unitOfWork.TimeSlots.ExistsAsync(
-            ts => ts.Id != id &&
-                  ts.Days == newDays &&
-                  ts.StartTime == newStart &&
-                  ts.EndTime == newEnd);
-
+            t => t.Days == finalDays
+              && t.StartTime == finalStart
+              && t.EndTime == finalEnd
+              && t.Id != id);
         if (duplicate)
-            return ApiResponse<TimeSlotResponseDto>.Fail("A time slot with the same days and times already exists.");
+            return ApiResponse<TimeSlotResponseDto>.Fail(
+                "A time slot with these days and times already exists.");
 
-        slot.Days = newDays;
-        slot.StartTime = newStart;
-        slot.EndTime = newEnd;
-        slot.Label = GenerateLabel(newDays, newStart, newEnd);
-        slot.UpdatedAt = DateTime.UtcNow;
-        slot.UpdatedBy = updatedBy;
+        timeSlot.Days = finalDays;
+        timeSlot.StartTime = finalStart;
+        timeSlot.EndTime = finalEnd;
 
-        _unitOfWork.TimeSlots.Update(slot);
+        // Auto-generate a human-readable label, e.g. "Mon/Wed 09:00–11:00"
+        timeSlot.Label = GenerateLabel(finalDays, finalStart, finalEnd);
+
+        timeSlot.UpdatedAt = DateTime.UtcNow;
+        timeSlot.UpdatedBy = updatedBy;
+
+        _unitOfWork.TimeSlots.Update(timeSlot);
         await _unitOfWork.SaveChangesAsync();
 
-        return ApiResponse<TimeSlotResponseDto>.Ok(_mapper.Map<TimeSlotResponseDto>(slot), "Time slot updated successfully.");
+        var responseDto = _mapper.Map<TimeSlotResponseDto>(timeSlot);
+        return ApiResponse<TimeSlotResponseDto>.Ok(responseDto, "Time slot updated successfully.");
     }
-
     public async Task<ApiResponse> DeleteAsync(Guid id, string deletedBy)
     {
         var slot = await _unitOfWork.TimeSlots.GetByIdAsync(id);

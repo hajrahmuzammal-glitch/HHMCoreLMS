@@ -71,46 +71,57 @@ namespace HHMCore.Core.Services
             return ApiResponse<BuildingResponseDto>.Ok(mapped, "Building fetched.");
         }
 
-        public async Task<ApiResponse<BuildingResponseDto>> UpdateAsync(Guid id, UpdateBuildingDto dto, string updatedBy)
+        public async Task<ApiResponse<BuildingResponseDto>> UpdateAsync(
+     Guid id,
+     UpdateBuildingDto dto,
+     string updatedBy)
         {
+            // Step 1 — Fetch with Rooms included (needed for response mapping)
             var building = await _unitOfWork.Buildings.GetByIdWithIncludesAsync(id, b => b.Rooms);
             if (building == null)
                 return ApiResponse<BuildingResponseDto>.Fail("Building not found.");
 
-            // Check name uniqueness only if a new name was sent
+            // Step 2 — Apply only fields that were actually sent
             if (!string.IsNullOrWhiteSpace(dto.Name))
             {
                 var nameExists = await _unitOfWork.Buildings.ExistsAsync(
                     b => b.Name.ToLower() == dto.Name.ToLower() && b.Id != id);
                 if (nameExists)
-                    return ApiResponse<BuildingResponseDto>.Fail("A building with this name already exists.");
+                    return ApiResponse<BuildingResponseDto>.Fail(
+                        $"A building with the name '{dto.Name}' already exists.");
+
+                building.Name = dto.Name.Trim();
             }
 
-            // Check code uniqueness only if a new code was sent
             if (!string.IsNullOrWhiteSpace(dto.Code))
             {
                 var codeExists = await _unitOfWork.Buildings.ExistsAsync(
                     b => b.Code!.ToUpper() == dto.Code.ToUpper() && b.Id != id);
                 if (codeExists)
-                    return ApiResponse<BuildingResponseDto>.Fail("A building with this code already exists.");
+                    return ApiResponse<BuildingResponseDto>.Fail(
+                        $"A building with the code '{dto.Code.ToUpper()}' already exists.");
+
+                building.Code = dto.Code.Trim().ToUpper();
             }
 
-            building.Name = string.IsNullOrWhiteSpace(dto.Name) ? building.Name : dto.Name.Trim();
-            building.Code = string.IsNullOrWhiteSpace(dto.Code) ? building.Code : dto.Code.Trim().ToUpper();
-            building.Description = string.IsNullOrWhiteSpace(dto.Description) ? building.Description : dto.Description.Trim();
+            if (!string.IsNullOrWhiteSpace(dto.Description))
+                building.Description = dto.Description.Trim();
+
+            // bool? — use ?? because bool cannot be empty string
             building.IsActive = dto.IsActive ?? building.IsActive;
 
+            // Step 3 — Stamp who updated it and when
             building.UpdatedAt = DateTime.UtcNow;
             building.UpdatedBy = updatedBy;
 
+            // Step 4 — Save (no need to re-fetch — EF tracks changes on the loaded entity)
             _unitOfWork.Buildings.Update(building);
             await _unitOfWork.SaveChangesAsync();
 
-            var updated = await _unitOfWork.Buildings.GetByIdWithIncludesAsync(id, b => b.Rooms);
-            var mapped = _mapper.Map<BuildingResponseDto>(updated);
-            return ApiResponse<BuildingResponseDto>.Ok(mapped, "Building updated successfully.");
+            // Step 5 — Map the already-loaded entity and return
+            var responseDto = _mapper.Map<BuildingResponseDto>(building);
+            return ApiResponse<BuildingResponseDto>.Ok(responseDto, "Building updated successfully.");
         }
-
         public async Task<ApiResponse> DeleteAsync(Guid id, string deletedBy)
         {
             var building = await _unitOfWork.Buildings.GetByIdAsync(id);

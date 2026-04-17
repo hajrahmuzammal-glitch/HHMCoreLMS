@@ -42,8 +42,7 @@ public class DesignationController : ControllerBase
     [HttpPut("{id:guid}")]
     public async Task<IActionResult> Update(Guid id, [FromBody] UpdateDesignationDto dto)
     {
-        dto.Id = id;
-        var result = await _designationService.UpdateAsync(dto, GetCurrentUserEmail());
+        var result = await _designationService.UpdateAsync(id,dto, GetCurrentUserEmail());
         return result.Success ? Ok(result) : BadRequest(result);
     }
 

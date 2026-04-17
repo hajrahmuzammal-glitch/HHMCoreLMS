@@ -7,10 +7,6 @@ public class UpdateSemesterValidator : AbstractValidator<UpdateSemesterDto>
 {
     public UpdateSemesterValidator()
     {
-        RuleFor(x => x.Id)
-            .NotEmpty().WithMessage("Semester Id is required.")
-            .Must(id => id != Guid.Empty).WithMessage("A valid Semester Id is required.");
-
         RuleFor(x => x.Name)
             .MaximumLength(100).WithMessage("Semester name cannot exceed 100 characters.")
             .When(x => !string.IsNullOrWhiteSpace(x.Name));

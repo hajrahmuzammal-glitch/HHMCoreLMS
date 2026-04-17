@@ -53,8 +53,8 @@ public class SemesterController : ControllerBase
     [Authorize(Roles = "Admin")]
     public async Task<IActionResult> Update(Guid id, [FromBody] UpdateSemesterDto dto)
     {
-        dto.Id = id;
-        var result = await _semesterService.UpdateAsync(dto, GetCurrentUserEmail());
+        
+        var result = await _semesterService.UpdateAsync(id,dto, GetCurrentUserEmail());
         return result.Success ? Ok(result) : BadRequest(result);
     }
 
