@@ -8,4 +8,6 @@ public class CreateCourseAssignmentDto
     public Guid SemesterId { get; set; }
     public Guid RoomId { get; set; }
     public Guid TimeSlotId { get; set; }
+    public string Section { get; set; } = string.Empty;
+    public int MaxEnrollment { get; set; }
 }

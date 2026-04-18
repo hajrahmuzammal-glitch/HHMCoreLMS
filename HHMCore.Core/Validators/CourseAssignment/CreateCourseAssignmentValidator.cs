@@ -26,5 +26,12 @@ public class CreateCourseAssignmentValidator
 
         RuleFor(x => x.TimeSlotId)
             .Must(id => id != Guid.Empty).WithMessage("A valid time slot is required.");
+
+        RuleFor(x => x.Section)
+            .NotEmpty().WithMessage("Section is required.")
+            .MaximumLength(10).WithMessage("Section cannot exceed 10 characters.");
+
+        RuleFor(x => x.MaxEnrollment)
+            .GreaterThan(0).WithMessage("Max enrollment must be greater than zero.");
     }
 }

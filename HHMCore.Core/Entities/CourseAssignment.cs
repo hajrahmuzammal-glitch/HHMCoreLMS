@@ -8,21 +8,29 @@ namespace HHMCore.Core.Entities
 {
     public class CourseAssignment : BaseEntity
     {
-        public Guid CourseId { get; set; }
-        public Course Course { get; set; } = null!;
-
+        // ── Foreign Keys ──────────────────────────────────────────────────────────
         public Guid TeacherId { get; set; }
-        public Teacher Teacher { get; set; } = null!;
-
+        public Guid CourseId { get; set; }
         public Guid SemesterId { get; set; }
-        public Semester Semester { get; set; } = null!;
-
         public Guid RoomId { get; set; }
-        public Room Room { get; set; } = null!;
-
         public Guid TimeSlotId { get; set; }
-        public TimeSlot TimeSlot { get; set; } = null!;
 
+        // Denormalized for fast conflict detection — avoids JOIN through Course
+        public Guid DepartmentId { get; set; }
+
+        // ── Navigation Properties ─────────────────────────────────────────────────
+        public Teacher Teacher { get; set; } = null!;
+        public Course Course { get; set; } = null!;
+        public Semester Semester { get; set; } = null!;
+        public Room Room { get; set; } = null!;
+        public TimeSlot TimeSlot { get; set; } = null!;
+        public Department Department { get; set; } = null!;
+
+        // ── Own Properties ────────────────────────────────────────────────────────
+        public string Section { get; set; } = string.Empty;
+        public int MaxEnrollment { get; set; }
+
+        // ── Child Collections ─────────────────────────────────────────────────────
         public ICollection<Attendance> Attendances { get; set; } = new List<Attendance>();
         public ICollection<Assignment> Assignments { get; set; } = new List<Assignment>();
         public ICollection<Quiz> Quizzes { get; set; } = new List<Quiz>();

@@ -132,6 +132,47 @@ namespace HHMCore.Data.Context
                 .HasForeignKey(ca => ca.TimeSlotId)
                 .OnDelete(DeleteBehavior.Restrict);
 
+            // CourseAssignment — global query filter
+            builder.Entity<CourseAssignment>()
+                .HasQueryFilter(ca => !ca.IsDeleted);
+
+            // All FKs use Restrict — prevents cascade delete conflicts
+            builder.Entity<CourseAssignment>()
+                .HasOne(ca => ca.Teacher)
+                .WithMany(t => t.CourseAssignments)
+                .HasForeignKey(ca => ca.TeacherId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            builder.Entity<CourseAssignment>()
+                .HasOne(ca => ca.Course)
+                .WithMany(c => c.CourseAssignments)
+                .HasForeignKey(ca => ca.CourseId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            builder.Entity<CourseAssignment>()
+                .HasOne(ca => ca.Semester)
+                .WithMany(s => s.CourseAssignments)
+                .HasForeignKey(ca => ca.SemesterId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            builder.Entity<CourseAssignment>()
+                .HasOne(ca => ca.Room)
+                .WithMany(r => r.CourseAssignments)
+                .HasForeignKey(ca => ca.RoomId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            builder.Entity<CourseAssignment>()
+                .HasOne(ca => ca.TimeSlot)
+                .WithMany(ts => ts.CourseAssignments)
+                .HasForeignKey(ca => ca.TimeSlotId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            builder.Entity<CourseAssignment>()
+                .HasOne(ca => ca.Department)
+                .WithMany()
+                .HasForeignKey(ca => ca.DepartmentId)
+                .OnDelete(DeleteBehavior.Restrict);
+
             // ── Enrollment ────────────────────────────────────────────────────────
             builder.Entity<Enrollment>()
                 .HasOne(e => e.Student)
