@@ -19,6 +19,11 @@ public class RoomService : IRoomService
 
     public async Task<ApiResponse<RoomResponseDto>> CreateAsync(CreateRoomDto dto, string createdBy)
     {
+
+        var buildingExists = await _unitOfWork.Buildings.ExistsAsync(b => b.Id == dto.BuildingId);
+        if (!buildingExists)
+            return ApiResponse<RoomResponseDto>.Fail("Building not found.");
+
         var exists = await _unitOfWork.Rooms.ExistsAsync(
             r => r.RoomNumber.ToUpper() == dto.RoomNumber.ToUpper() &&
                  r.BuildingId == dto.BuildingId);
@@ -36,11 +41,11 @@ public class RoomService : IRoomService
             CreatedAt = DateTime.UtcNow,
             CreatedBy = createdBy
         };
-
+        
         await _unitOfWork.Rooms.AddAsync(room);
         await _unitOfWork.SaveChangesAsync();
-
-        return ApiResponse<RoomResponseDto>.Ok(_mapper.Map<RoomResponseDto>(room), "Room created successfully.");
+        var saved = await _unitOfWork.Rooms.GetByIdWithIncludesAsync(room.Id, r => r.Building);
+        return ApiResponse<RoomResponseDto>.Ok(_mapper.Map<RoomResponseDto>(saved), "Room created successfully.");
     }
 
     public async Task<ApiResponse<IReadOnlyList<RoomResponseDto>>> CreateBulkAsync(
@@ -81,7 +86,15 @@ public class RoomService : IRoomService
 
         await _unitOfWork.SaveChangesAsync();
 
-        var result = _mapper.Map<IReadOnlyList<RoomResponseDto>>(createdRooms);
+        var savedRooms = new List<Room>();
+        foreach (var room in createdRooms)
+        {
+            var saved = await _unitOfWork.Rooms.GetByIdWithIncludesAsync(room.Id, r => r.Building);
+            if (saved != null)
+                savedRooms.Add(saved);
+        }
+
+        var result = _mapper.Map<IReadOnlyList<RoomResponseDto>>(savedRooms);
         var message = skipped.Count > 0
             ? $"{createdRooms.Count} room(s) created. Skipped duplicates: {string.Join(", ", skipped)}."
             : $"{createdRooms.Count} room(s) created successfully.";
@@ -91,14 +104,14 @@ public class RoomService : IRoomService
 
     public async Task<ApiResponse<IReadOnlyList<RoomResponseDto>>> GetAllAsync()
     {
-        var rooms = await _unitOfWork.Rooms.GetAllAsync();
+        var rooms = await _unitOfWork.Rooms.GetAllWithIncludesAsync(r => r.Building);
         return ApiResponse<IReadOnlyList<RoomResponseDto>>.Ok(
             _mapper.Map<IReadOnlyList<RoomResponseDto>>(rooms), "Rooms fetched.");
     }
 
     public async Task<ApiResponse<RoomResponseDto>> GetByIdAsync(Guid id)
     {
-        var room = await _unitOfWork.Rooms.GetByIdAsync(id);
+        var room = await _unitOfWork.Rooms.GetByIdWithIncludesAsync(id, r => r.Building);
         if (room is null)
             return ApiResponse<RoomResponseDto>.Fail("Room not found.");
 
@@ -113,7 +126,7 @@ public class RoomService : IRoomService
 
         var bookedRoomIds = bookedAssignments.Select(ca => ca.RoomId).ToHashSet();
 
-        var allRooms = await _unitOfWork.Rooms.FindAsync(r => r.IsActive);
+        var allRooms = await _unitOfWork.Rooms.FindWithIncludesAsync(r => r.IsActive, r => r.Building);
 
         var availableRooms = allRooms.Where(r => !bookedRoomIds.Contains(r.Id)).ToList();
 
