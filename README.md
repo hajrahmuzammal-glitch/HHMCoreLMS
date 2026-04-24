@@ -1,5 +1,7 @@
 # HHMCore LMS
 
+![Build and Test](https://github.com/YOUR_GITHUB_USERNAME/YOUR_REPO_NAME/actions/workflows/build-and-test.yml/badge.svg)
+
 **A University Learning Management System built with ASP.NET Core 8 Web API**
 
 A portfolio-grade, production-architecture LMS designed for universities — covering student management, teacher management, scheduling, attendance, grading, and fee management. Built with clean layered architecture and industry-standard patterns.
