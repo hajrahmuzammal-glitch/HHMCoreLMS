@@ -11,7 +11,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HHMCore.Data", "HHMCore.Dat
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HMMCore.Tests", "HMMCore.Tests\HMMCore.Tests.csproj", "{EAD79AD2-A4F0-48F8-92BC-24423D9EE6EF}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".github", ".github", "{9E11D2B2-002B-42F9-BE90-C8C7687CCE91}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "github", "github", "{9E11D2B2-002B-42F9-BE90-C8C7687CCE91}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "workflows", "workflows", "{B15A3F01-018C-43EC-89AB-1E130F8FA22B}"
 	ProjectSection(SolutionItems) = preProject
