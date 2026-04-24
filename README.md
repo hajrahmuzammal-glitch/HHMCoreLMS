@@ -1,6 +1,6 @@
 # HHMCore LMS
 
-![Build and Test](https://github.com/YOUR_GITHUB_USERNAME/YOUR_REPO_NAME/actions/workflows/build-and-test.yml/badge.svg)
+![Build and Test](https://github.com/hajrahmuzammal-glitch/HHMCoreLMS/actions/workflows/build-and-test.yml/badge.svg)
 
 **A University Learning Management System built with ASP.NET Core 8 Web API**
 
