@@ -1,4 +1,4 @@
-﻿namespace HHMCore.Core.Validators;
+namespace HHMCore.Core.Validators;
 
 using FluentValidation;
 using HHMCore.Core.DTOs.TimeSlot;
@@ -13,6 +13,17 @@ public class UpdateTimeSlotValidator : AbstractValidator<UpdateTimeSlotDto>
             .Must(d => ((int)d!.Value & ~63) == 0)
                 .WithMessage("Days contains an invalid value.")
             .When(x => x.Days.HasValue);
+
+        RuleFor(x => x.StartTime)
+            .Must(t => t!.Value != default(TimeOnly))
+            .WithMessage("Start time cannot be midnight default.")
+            .When(x => x.StartTime.HasValue);
+
+        RuleFor(x => x.EndTime)
+            .Must(t => t!.Value != default(TimeOnly))
+            .WithMessage("End time cannot be midnight default.")
+            .When(x => x.EndTime.HasValue);
+
 
         // Cross-field: only when both are supplied in the DTO
         When(x => x.StartTime.HasValue && x.EndTime.HasValue, () =>

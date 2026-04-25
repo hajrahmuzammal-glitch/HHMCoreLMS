@@ -1,4 +1,4 @@
-﻿using AutoMapper;
+using AutoMapper;
 using HHMCore.Core.Common;
 using HHMCore.Core.DTOs.TimeSlot;
 using HHMCore.Core.Entities;
@@ -20,6 +20,12 @@ public class TimeSlotService : ITimeSlotService
 
     public async Task<ApiResponse<TimeSlotResponseDto>> CreateAsync(CreateTimeSlotDto dto, string createdBy)
     {
+        if (dto.EndTime <= dto.StartTime)
+        {
+            return ApiResponse<TimeSlotResponseDto>.Fail(
+                "End time must be after start time.");
+        }
+
         var exists = await _unitOfWork.TimeSlots.ExistsAsync(
             ts => ts.Days == dto.Days &&
                   ts.StartTime == dto.StartTime &&
