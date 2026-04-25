@@ -1,73 +1,121 @@
-﻿using FluentAssertions;
+using FluentAssertions;
+using FluentValidation.TestHelper;
 using HHMCore.Core.DTOs.Room;
 using HHMCore.Core.Enums;
 using HHMCore.Core.Validators.Room;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
-namespace HMMCore.Tests.Validators.RoomValidator
+namespace HHMCore.Tests.Validators.Room;
+
+public class UpdateRoomValidatorTests
 {
-    public class UpdateRoomValidatorTests
+    private readonly UpdateRoomValidator _validator = new();
+
+    private static readonly Guid ValidBuildingId =
+        new Guid("11111111-1111-1111-1111-111111111111");
+
+    // ── RoomNumber ────────────────────────────────────────────────────────────
+
+    [Fact]
+    public void RoomNumber_ProvidedButEmpty_FailsValidation()
     {
-        private readonly UpdateRoomValidator _validator = new();
+        // Sending an empty string means "I sent this field but gave it no value"
+        // That is invalid even in an update
+        var dto = new UpdateRoomDto { RoomNumber = string.Empty };
 
-        [Fact]
-        public void EmptyDto_PassesValidation()
-        {
-            var result = _validator.Validate(new UpdateRoomDto());
-            result.IsValid.Should().BeTrue();
-        }
+        var result = _validator.TestValidate(dto);
 
-        [Fact]
-        public void RoomNumber_TooLong_WhenProvided_FailsValidation()
-        {
-            var dto = new UpdateRoomDto { RoomNumber = new string('A', 21) };
-            _validator.Validate(dto).IsValid.Should().BeFalse();
-        }
+        result.ShouldHaveValidationErrorFor(x => x.RoomNumber);
+    }
 
-        [Fact]
-        public void BuildingId_EmptyGuid_WhenProvided_FailsValidation()
-        {
-            var dto = new UpdateRoomDto { BuildingId = Guid.Empty };
-            _validator.Validate(dto).IsValid.Should().BeFalse();
-        }
+    [Fact]
+    public void RoomNumber_ProvidedAndExceedsMaxLength_FailsValidation()
+    {
+        var dto = new UpdateRoomDto { RoomNumber = new string('A', 21) };
 
-        [Fact]
-        public void Capacity_Zero_WhenProvided_FailsValidation()
-        {
-            var dto = new UpdateRoomDto { Capacity = 0 };
-            _validator.Validate(dto).IsValid.Should().BeFalse();
-        }
+        var result = _validator.TestValidate(dto);
 
-        [Fact]
-        public void Capacity_Negative_WhenProvided_FailsValidation()
-        {
-            var dto = new UpdateRoomDto { Capacity = -1 };
-            _validator.Validate(dto).IsValid.Should().BeFalse();
-        }
+        result.ShouldHaveValidationErrorFor(x => x.RoomNumber);
+    }
 
-        [Fact]
-        public void RoomType_InvalidValue_WhenProvided_FailsValidation()
-        {
-            var dto = new UpdateRoomDto { RoomType = (RoomType)99 };
-            _validator.Validate(dto).IsValid.Should().BeFalse();
-        }
+    [Fact]
+    public void RoomNumber_ProvidedAndValid_PassesValidation()
+    {
+        var dto = new UpdateRoomDto { RoomNumber = "Lab-3" };
 
-        [Fact]
-        public void ValidDto_AllFieldsProvided_PassesValidation() //gonna look at this logic 
-        {
-            var dto = new UpdateRoomDto
-            {
-                RoomNumber = "B202",
-                BuildingId = Guid.Parse("22222222-2222-2222-2222-222222222222"),
-                Capacity = 50,
-                RoomType = RoomType.Lab,
-                IsActive = false
-            };
-            _validator.Validate(dto).IsValid.Should().BeTrue();
-        }
+        var result = _validator.TestValidate(dto);
+
+        result.ShouldNotHaveValidationErrorFor(x => x.RoomNumber);
+    }
+
+    // ── BuildingId ────────────────────────────────────────────────────────────
+
+    [Fact]
+    public void BuildingId_ProvidedAsEmptyGuid_FailsValidation()
+    {
+        // Providing Guid.Empty means the caller explicitly sent an invalid value
+        var dto = new UpdateRoomDto { BuildingId = Guid.Empty };
+
+        var result = _validator.TestValidate(dto);
+
+        result.ShouldHaveValidationErrorFor(x => x.BuildingId);
+    }
+
+    [Fact]
+    public void BuildingId_ProvidedAndValid_PassesValidation()
+    {
+        var dto = new UpdateRoomDto { BuildingId = ValidBuildingId };
+
+        var result = _validator.TestValidate(dto);
+
+        result.ShouldNotHaveValidationErrorFor(x => x.BuildingId);
+    }
+
+    // ── Capacity ──────────────────────────────────────────────────────────────
+
+    [Fact]
+    public void Capacity_ProvidedAsZero_FailsValidation()
+    {
+        var dto = new UpdateRoomDto { Capacity = 0 };
+
+        var result = _validator.TestValidate(dto);
+
+        result.ShouldHaveValidationErrorFor(x => x.Capacity);
+    }
+
+    [Fact]
+    public void Capacity_ProvidedAsNegative_FailsValidation()
+    {
+        var dto = new UpdateRoomDto { Capacity = -5 };
+
+        var result = _validator.TestValidate(dto);
+
+        result.ShouldHaveValidationErrorFor(x => x.Capacity);
+    }
+
+    // ── RoomType ──────────────────────────────────────────────────────────────
+
+    [Fact]
+    public void RoomType_ProvidedAsInvalidEnum_FailsValidation()
+    {
+        var dto = new UpdateRoomDto { RoomType = (RoomType)99 };
+
+        var result = _validator.TestValidate(dto);
+
+        result.ShouldHaveValidationErrorFor(x => x.RoomType);
+    }
+
+    // ── Empty dto — the most important test for UpdateValidator ───────────────
+
+    [Fact]
+    public void EmptyDto_AllFieldsNull_PassesValidation()
+    {
+        // A PATCH-style update sending nothing is valid
+        // The service retains all existing values for null fields
+        // The validator must not block this
+        var dto = new UpdateRoomDto();
+
+        var result = _validator.TestValidate(dto);
+
+        result.ShouldNotHaveAnyValidationErrors();
     }
 }

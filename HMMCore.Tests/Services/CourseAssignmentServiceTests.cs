@@ -1,4 +1,4 @@
-﻿using AutoMapper;
+using AutoMapper;
 using FluentAssertions;
 using Moq;
 using HHMCore.Core.DTOs.CourseAssignment;
@@ -448,7 +448,33 @@ public class CourseAssignmentServiceTests
         result.Success.Should().BeFalse();
         result.Message.Should().Contain("capacity");
         _uow.Verify(u => u.SaveChangesAsync(), Times.Never);
+
     }
+    [Fact]
+    public async Task UpdateAsync_ValidChange_SavesOnce()
+    {
+        var existing = FullAssignment();
+
+        _caRepo.Setup(r => r.GetByIdAsync(AssignId)).ReturnsAsync(existing);
+        _caRepo.Setup(r => r.ExistsAsync(
+            It.IsAny<Expression<Func<CourseAssignment, bool>>>()))
+            .ReturnsAsync(false);
+        _uow.Setup(u => u.SaveChangesAsync()).ReturnsAsync(1);
+        _caRepo.Setup(r => r.GetByIdWithDetailsAsync(
+                   It.IsAny<Guid>(),
+                   It.IsAny<Func<IQueryable<CourseAssignment>,
+                                  IQueryable<CourseAssignment>>>()))
+               .ReturnsAsync(FullAssignment());
+
+        var result = await _sut.UpdateAsync(
+            AssignId,
+            new UpdateCourseAssignmentDto { Section = "B" },
+            "admin@test.com");
+
+        result.Success.Should().BeTrue();
+        _uow.Verify(u => u.SaveChangesAsync(), Times.Once);
+    }
+
     // ── GET BY ID ─────────────────────────────────────────────────────────────
 
     [Fact]
@@ -666,5 +692,6 @@ public class CourseAssignmentServiceTests
         result.Success.Should().BeTrue();
         assignment.IsDeleted.Should().BeTrue();
         _uow.Verify(u => u.SaveChangesAsync(), Times.Once);
+        _caRepo.Verify(r => r.Update(assignment), Times.Once);
     }
 }
