@@ -24,8 +24,10 @@ public class SemesterService : ISemesterService
             s => s.Name.ToLower() == dto.Name.ToLower().Trim());
 
         if (nameExists)
+        {
             return ApiResponse<SemesterResponseDto>.Fail(
                 "A semester with this name already exists.");
+        }
 
         var semester = new Semester
         {
@@ -57,7 +59,9 @@ public class SemesterService : ISemesterService
     {
         var semester = await _unitOfWork.Semesters.GetByIdAsync(id);
         if (semester == null)
+        {
             return ApiResponse<SemesterResponseDto>.Fail("Semester not found.");
+        }
 
         var response = _mapper.Map<SemesterResponseDto>(semester);
         return ApiResponse<SemesterResponseDto>.Ok(response, "Semester fetched successfully.");
@@ -78,7 +82,9 @@ public class SemesterService : ISemesterService
     {
         var semester = await _unitOfWork.Semesters.GetByIdAsync(id);
         if (semester == null)
+        {
             return ApiResponse<SemesterResponseDto>.Fail("Semester not found.");
+        }
 
         if (!string.IsNullOrWhiteSpace(dto.Name) &&
             !string.Equals(dto.Name.Trim(), semester.Name, StringComparison.OrdinalIgnoreCase))
@@ -86,8 +92,10 @@ public class SemesterService : ISemesterService
             var nameExists = await _unitOfWork.Semesters.ExistsAsync(
                 s => s.Name.ToLower() == dto.Name.ToLower() && s.Id != id);
             if (nameExists)
+            {
                 return ApiResponse<SemesterResponseDto>.Fail(
                     $"A semester with the name '{dto.Name}' already exists.");
+            }
 
             semester.Name = dto.Name.Trim();
         }
@@ -97,8 +105,10 @@ public class SemesterService : ISemesterService
         var finalEnd = dto.EndDate ?? semester.EndDate;
 
         if (finalEnd <= finalStart)
+        {
             return ApiResponse<SemesterResponseDto>.Fail(
                 "End date must be after start date.");
+        }
 
         semester.StartDate = finalStart;
         semester.EndDate = finalEnd;
@@ -116,11 +126,15 @@ public class SemesterService : ISemesterService
     {
         var semester = await _unitOfWork.Semesters.GetByIdAsync(id);
         if (semester == null)
+        {
             return ApiResponse<SemesterResponseDto>.Fail("Semester not found.");
+        }
 
         if (semester.IsActive)
+        {
             return ApiResponse<SemesterResponseDto>.Fail(
                 "This semester is already active.");
+        }
 
         semester.IsActive = true;
         semester.UpdatedAt = DateTime.UtcNow;
@@ -139,11 +153,15 @@ public class SemesterService : ISemesterService
     {
         var semester = await _unitOfWork.Semesters.GetByIdAsync(id);
         if (semester == null)
+        {
             return ApiResponse<SemesterResponseDto>.Fail("Semester not found.");
+        }
 
         if (!semester.IsActive)
+        {
             return ApiResponse<SemesterResponseDto>.Fail(
                 "This semester is already inactive.");
+        }
 
         semester.IsActive = false;
         semester.UpdatedAt = DateTime.UtcNow;
@@ -161,25 +179,33 @@ public class SemesterService : ISemesterService
     {
         var semester = await _unitOfWork.Semesters.GetByIdAsync(id);
         if (semester == null)
+        {
             return ApiResponse.Fail("Semester not found.");
+        }
 
         if (semester.IsActive)
+        {
             return ApiResponse.Fail(
                 "Cannot delete an active semester. Deactivate it first.");
+        }
 
         var hasAssignments = await _unitOfWork.CourseAssignments.ExistsAsync(
             ca => ca.SemesterId == id);
 
         if (hasAssignments)
+        {
             return ApiResponse.Fail(
                 "Cannot delete this semester. Course assignments are linked to it.");
+        }
 
         var hasEnrollments = await _unitOfWork.Enrollments.ExistsAsync(
             e => e.SemesterId == id);
 
         if (hasEnrollments)
+        {
             return ApiResponse.Fail(
                 "Cannot delete this semester. Students are enrolled in it.");
+        }
 
         _unitOfWork.Semesters.Delete(semester);
         await _unitOfWork.SaveChangesAsync();

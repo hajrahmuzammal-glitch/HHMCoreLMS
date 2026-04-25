@@ -78,7 +78,10 @@ public class RoomController : ControllerBase
     {
         var result = await _roomService.DeleteAsync(id, GetCurrentUserEmail());
         if (!result.Success)
+        {
             return BadRequest(result);
+        }
+
         return Ok(result);
     }
 }

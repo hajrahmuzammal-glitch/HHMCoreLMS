@@ -22,14 +22,18 @@ public class RoomService : IRoomService
 
         var buildingExists = await _unitOfWork.Buildings.ExistsAsync(b => b.Id == dto.BuildingId);
         if (!buildingExists)
+        {
             return ApiResponse<RoomResponseDto>.Fail("Building not found.");
+        }
 
         var exists = await _unitOfWork.Rooms.ExistsAsync(
             r => r.RoomNumber.ToUpper() == dto.RoomNumber.ToUpper() &&
                  r.BuildingId == dto.BuildingId);
 
         if (exists)
+        {
             return ApiResponse<RoomResponseDto>.Fail($"Room '{dto.RoomNumber}' in building already exists.");
+        }
 
         var room = new Room
         {
@@ -52,7 +56,9 @@ public class RoomService : IRoomService
         List<CreateRoomDto> dtos, string createdBy)
     {
         if (dtos == null || dtos.Count == 0)
+        {
             return ApiResponse<IReadOnlyList<RoomResponseDto>>.Fail("No rooms provided.");
+        }
 
         var createdRooms = new List<Room>();
         var skipped = new List<string>();
@@ -91,7 +97,9 @@ public class RoomService : IRoomService
         {
             var saved = await _unitOfWork.Rooms.GetByIdWithIncludesAsync(room.Id, r => r.Building);
             if (saved != null)
+            {
                 savedRooms.Add(saved);
+            }
         }
 
         var result = _mapper.Map<IReadOnlyList<RoomResponseDto>>(savedRooms);
@@ -113,7 +121,9 @@ public class RoomService : IRoomService
     {
         var room = await _unitOfWork.Rooms.GetByIdWithIncludesAsync(id, r => r.Building);
         if (room is null)
+        {
             return ApiResponse<RoomResponseDto>.Fail("Room not found.");
+        }
 
         return ApiResponse<RoomResponseDto>.Ok(_mapper.Map<RoomResponseDto>(room), "Room fetched.");
     }
@@ -143,14 +153,18 @@ public class RoomService : IRoomService
         // Step 1 — Fetch with Building included (needed for response mapping)
         var room = await _unitOfWork.Rooms.GetByIdWithIncludesAsync(id, r => r.Building);
         if (room == null)
+        {
             return ApiResponse<RoomResponseDto>.Fail("Room not found.");
+        }
 
         // Step 2 — If a new BuildingId was sent, verify that building exists
         if (dto.BuildingId.HasValue)
         {
             var building = await _unitOfWork.Buildings.GetByIdAsync(dto.BuildingId.Value);
             if (building == null)
+            {
                 return ApiResponse<RoomResponseDto>.Fail("Building not found.");
+            }
         }
 
         // Step 3 — Duplicate room number check
@@ -163,8 +177,10 @@ public class RoomService : IRoomService
                   && r.BuildingId == targetBuildingId
                   && r.Id != id);
             if (roomExists)
+            {
                 return ApiResponse<RoomResponseDto>.Fail(
                     $"Room '{dto.RoomNumber}' already exists in this building.");
+            }
 
             room.RoomNumber = dto.RoomNumber.Trim();
         }
@@ -192,12 +208,16 @@ public class RoomService : IRoomService
     {
         var room = await _unitOfWork.Rooms.GetByIdAsync(id);
         if (room is null)
+        {
             return ApiResponse.Fail("Room not found.");
+        }
 
         var hasAssignments = await _unitOfWork.CourseAssignments.ExistsAsync(ca => ca.RoomId == id);
         if (hasAssignments)
+        {
             return ApiResponse.Fail(
                 "Cannot delete this room. It is assigned to one or more classes. Reassign the classes first.");
+        }
 
         room.UpdatedAt = DateTime.UtcNow;
         room.UpdatedBy = deletedBy;

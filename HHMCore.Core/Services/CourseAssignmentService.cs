@@ -381,7 +381,9 @@ public class CourseAssignmentService : ICourseAssignmentService
         var teacher = await _unitOfWork.Teachers.FindOneAsync(
             t => t.UserId == userId && !t.IsDeleted);
         if (teacher is null)
+        {
             return ApiResponse<IReadOnlyList<CourseAssignmentResponseDto>>.Fail("Teacher profile not found.");
+        }
 
         var assignments = await _unitOfWork.CourseAssignments
             .FindWithDetailsAsync(

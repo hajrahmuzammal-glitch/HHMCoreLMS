@@ -26,7 +26,9 @@ public class TimeSlotService : ITimeSlotService
                   ts.EndTime == dto.EndTime);
 
         if (exists)
+        {
             return ApiResponse<TimeSlotResponseDto>.Fail("A time slot with the same days and times already exists.");
+        }
 
         var label = GenerateLabel(dto.Days, dto.StartTime, dto.EndTime);
 
@@ -57,7 +59,9 @@ public class TimeSlotService : ITimeSlotService
     {
         var slot = await _unitOfWork.TimeSlots.GetByIdAsync(id);
         if (slot is null)
+        {
             return ApiResponse<TimeSlotResponseDto>.Fail("Time slot not found.");
+        }
 
         return ApiResponse<TimeSlotResponseDto>.Ok(_mapper.Map<TimeSlotResponseDto>(slot), "Time slot fetched.");
     }
@@ -69,7 +73,9 @@ public class TimeSlotService : ITimeSlotService
     {
         var timeSlot = await _unitOfWork.TimeSlots.GetByIdAsync(id);
         if (timeSlot == null)
+        {
             return ApiResponse<TimeSlotResponseDto>.Fail("Time slot not found.");
+        }
 
         // Work out the final values before comparing them
         var finalDays = dto.Days ?? timeSlot.Days;
@@ -78,8 +84,10 @@ public class TimeSlotService : ITimeSlotService
 
         // End time must come after start time
         if (finalEnd <= finalStart)
+        {
             return ApiResponse<TimeSlotResponseDto>.Fail(
                 "End time must be after start time.");
+        }
 
         // Check for a duplicate time slot (same days + same times, different record)
         var duplicate = await _unitOfWork.TimeSlots.ExistsAsync(
@@ -88,8 +96,10 @@ public class TimeSlotService : ITimeSlotService
               && t.EndTime == finalEnd
               && t.Id != id);
         if (duplicate)
+        {
             return ApiResponse<TimeSlotResponseDto>.Fail(
                 "A time slot with these days and times already exists.");
+        }
 
         timeSlot.Days = finalDays;
         timeSlot.StartTime = finalStart;
@@ -111,11 +121,15 @@ public class TimeSlotService : ITimeSlotService
     {
         var slot = await _unitOfWork.TimeSlots.GetByIdAsync(id);
         if (slot is null)
+        {
             return ApiResponse.Fail("Time slot not found.");
+        }
 
         var hasAssignments = await _unitOfWork.CourseAssignments.ExistsAsync(ca => ca.TimeSlotId == id);
         if (hasAssignments)
+        {
             return ApiResponse.Fail("Cannot delete this time slot. It is assigned to one or more classes. Reassign the classes first.");
+        }
 
         slot.UpdatedAt = DateTime.UtcNow;
         slot.UpdatedBy = deletedBy;

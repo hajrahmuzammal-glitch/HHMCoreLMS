@@ -33,16 +33,22 @@ public class StudentService : IStudentService
 
         var existingUser = await _userManager.FindByEmailAsync(normalizedEmail);
         if (existingUser is not null)
+        {
             return ApiResponse<StudentResponseDto>.Fail("A user with this email already exists.");
+        }
 
         var rollExists = await _unitOfWork.Students
             .ExistsAsync(s => s.RollNumber == dto.RollNumber.Trim().ToUpper());
         if (rollExists)
+        {
             return ApiResponse<StudentResponseDto>.Fail("A student with this roll number already exists.");
+        }
 
         var department = await _unitOfWork.Departments.GetByIdAsync(dto.DepartmentId);
         if (department is null)
+        {
             return ApiResponse<StudentResponseDto>.Fail("Department not found.");
+        }
 
         var appUser = new AppUser
         {
@@ -112,7 +118,9 @@ public class StudentService : IStudentService
             .GetByIdWithIncludesAsync(id, s => s.User, s => s.Department);
 
         if (student is null)
+        {
             return ApiResponse<StudentResponseDto>.Fail("Student not found.");
+        }
 
         var response = _mapper.Map<StudentResponseDto>(student);
         return ApiResponse<StudentResponseDto>.Ok(response, "Student retrieved successfully.");
@@ -134,7 +142,9 @@ public class StudentService : IStudentService
             .GetByIdWithIncludesAsync(id, s => s.User, s => s.Department);
 
         if (student is null)
+        {
             return ApiResponse<StudentResponseDto>.Fail("Student not found.");
+        }
 
         if (!string.IsNullOrWhiteSpace(dto.FullName))
         {
@@ -150,7 +160,10 @@ public class StudentService : IStudentService
         {
             var department = await _unitOfWork.Departments.GetByIdAsync(dto.DepartmentId.Value);
             if (department is null)
+            {
                 return ApiResponse<StudentResponseDto>.Fail("Department not found.");
+            }
+
             student.DepartmentId = dto.DepartmentId.Value;
         }
 
@@ -177,7 +190,9 @@ public class StudentService : IStudentService
     {
         var student = await _unitOfWork.Students.GetByIdAsync(id);
         if (student is null)
+        {
             return ApiResponse.Fail("Student not found.");
+        }
 
         student.UpdatedAt = DateTime.UtcNow;
         student.UpdatedBy = deletedBy;
@@ -194,7 +209,9 @@ public class StudentService : IStudentService
             .FindOneWithIncludesAsync(s => s.UserId == userId, s => s.User, s => s.Department);
 
         if (student is null)
+        {
             return ApiResponse<StudentResponseDto>.Fail("Student profile not found.");
+        }
 
         var response = _mapper.Map<StudentResponseDto>(student);
         return ApiResponse<StudentResponseDto>.Ok(response, "Profile retrieved successfully.");

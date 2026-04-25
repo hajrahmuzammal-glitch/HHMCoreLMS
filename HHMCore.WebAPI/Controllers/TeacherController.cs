@@ -41,7 +41,9 @@ namespace HHMCore.WebAPI.Controllers
             var result = await _teacherService.GetByIdAsync(id);
 
             if (!result.Success)
+            {
                 return NotFound(result);
+            }
 
             return Ok(result);
         }
@@ -59,11 +61,15 @@ namespace HHMCore.WebAPI.Controllers
         public async Task<IActionResult> Update(Guid id, [FromBody] UpdateTeacherDto dto)
         {
             if (id != dto.Id)
+            {
                 return BadRequest(new { success = false, message = "ID in URL does not match ID in body." });
+            }
 
             var existing = await _teacherService.GetByIdAsync(id);
             if (!existing.Success)
+            {
                 return NotFound(existing);
+            }
 
             var result = await _teacherService.UpdateAsync(dto, GetCurrentUserEmail());
             return result.Success ? Ok(result) : BadRequest(result);
@@ -91,8 +97,10 @@ namespace HHMCore.WebAPI.Controllers
         public async Task<IActionResult> UpdateMyProfile([FromBody] UpdateTeacherProfileDto dto)
         {
             var userId = GetCurrentUserId();               
-            if (string.IsNullOrEmpty(userId))             
+            if (string.IsNullOrEmpty(userId))
+            {
                 return Unauthorized();
+            }
 
             var result = await _teacherService.UpdateMyProfileAsync(userId, dto);
             return result.Success ? Ok(result) : BadRequest(result);

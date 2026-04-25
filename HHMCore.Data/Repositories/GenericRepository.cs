@@ -29,7 +29,11 @@ public class GenericRepository<T> : IGenericRepository<T> where T : BaseEntity
     public async Task<T?> GetByIdWithIncludesAsync(Guid id, params Expression<Func<T, object>>[] includes)
     {
         IQueryable<T> query = _dbSet.AsNoTracking();
-        foreach (var include in includes) query = query.Include(include);
+        foreach (var include in includes)
+        {
+            query = query.Include(include);
+        }
+
         return await query.FirstOrDefaultAsync(e => e.Id == id);
     }
 
@@ -44,7 +48,11 @@ public class GenericRepository<T> : IGenericRepository<T> where T : BaseEntity
     public async Task<T?> GetByIdWithPathIncludesAsync(Guid id, params string[] paths)
     {
         IQueryable<T> query = _dbSet.AsNoTracking();
-        foreach (var path in paths) query = query.Include(path);
+        foreach (var path in paths)
+        {
+            query = query.Include(path);
+        }
+
         return await query.FirstOrDefaultAsync(e => e.Id == id);
     }
 
@@ -52,7 +60,11 @@ public class GenericRepository<T> : IGenericRepository<T> where T : BaseEntity
     public async Task<T?> FindOneWithIncludesAsync(Expression<Func<T, bool>> predicate, params Expression<Func<T, object>>[] includes)
     {
         IQueryable<T> query = _dbSet.AsNoTracking();
-        foreach (var include in includes) query = query.Include(include);
+        foreach (var include in includes)
+        {
+            query = query.Include(include);
+        }
+
         return await query.FirstOrDefaultAsync(predicate);
     }
 
@@ -60,7 +72,11 @@ public class GenericRepository<T> : IGenericRepository<T> where T : BaseEntity
     public async Task<T?> FindOneWithPathIncludesAsync(Expression<Func<T, bool>> predicate, params string[] paths)
     {
         IQueryable<T> query = _dbSet.AsNoTracking();
-        foreach (var path in paths) query = query.Include(path);
+        foreach (var path in paths)
+        {
+            query = query.Include(path);
+        }
+
         return await query.FirstOrDefaultAsync(predicate);
     }
 
@@ -82,7 +98,11 @@ public class GenericRepository<T> : IGenericRepository<T> where T : BaseEntity
     public async Task<IReadOnlyList<T>> GetAllWithIncludesAsync(params Expression<Func<T, object>>[] includes)
     {
         IQueryable<T> query = _dbSet.AsNoTracking();
-        foreach (var include in includes) query = query.Include(include);
+        foreach (var include in includes)
+        {
+            query = query.Include(include);
+        }
+
         return await query.ToListAsync();
     }
 
@@ -104,7 +124,11 @@ public class GenericRepository<T> : IGenericRepository<T> where T : BaseEntity
     public async Task<IReadOnlyList<T>> FindWithIncludesAsync(Expression<Func<T, bool>> predicate, params Expression<Func<T, object>>[] includes)
     {
         IQueryable<T> query = _dbSet.AsNoTracking();
-        foreach (var include in includes) query = query.Include(include);
+        foreach (var include in includes)
+        {
+            query = query.Include(include);
+        }
+
         return await query.Where(predicate).ToListAsync();
     }
 
@@ -112,7 +136,11 @@ public class GenericRepository<T> : IGenericRepository<T> where T : BaseEntity
     public async Task<IReadOnlyList<T>> GetAllWithPathIncludesAsync(params string[] paths)
     {
         IQueryable<T> query = _dbSet.AsNoTracking();
-        foreach (var path in paths) query = query.Include(path);
+        foreach (var path in paths)
+        {
+            query = query.Include(path);
+        }
+
         return await query.ToListAsync();
     }
 
@@ -120,7 +148,11 @@ public class GenericRepository<T> : IGenericRepository<T> where T : BaseEntity
     public async Task<IReadOnlyList<T>> FindWithPathIncludesAsync(Expression<Func<T, bool>> predicate, params string[] paths)
     {
         IQueryable<T> query = _dbSet.AsNoTracking();
-        foreach (var path in paths) query = query.Include(path);
+        foreach (var path in paths)
+        {
+            query = query.Include(path);
+        }
+
         return await query.Where(predicate).ToListAsync();
     }
 

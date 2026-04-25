@@ -28,7 +28,9 @@ namespace HHMCore.Core.Services
            
             var exists = await _roleManager.RoleExistsAsync(normalizedName);
             if (exists)
+            {
                 return ApiResponse<RoleResponseDto>.Fail($"Role '{normalizedName}' already exists.");
+            }
 
             var result = await _roleManager.CreateAsync(new IdentityRole(normalizedName));
             if (!result.Succeeded)
@@ -75,12 +77,16 @@ namespace HHMCore.Core.Services
         {
             var role = await _roleManager.FindByNameAsync(roleName);
             if (role == null)
+            {
                 return ApiResponse.Fail($"Role '{roleName}' not found.");
+            }
 
-             var usersInRole = await _userManager.GetUsersInRoleAsync(roleName);
+            var usersInRole = await _userManager.GetUsersInRoleAsync(roleName);
             if (usersInRole.Count > 0)
+            {
                 return ApiResponse.Fail(
                     $"Cannot delete role '{roleName}'. {usersInRole.Count} user(s) are assigned to it. Reassign them first.");
+            }
 
             var result = await _roleManager.DeleteAsync(role);
             if (!result.Succeeded)

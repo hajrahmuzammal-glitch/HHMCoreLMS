@@ -43,7 +43,9 @@ namespace HHMCore.WebAPI.Controllers
             var result = await _studentService.GetByIdAsync(id);
 
             if (!result.Success || result.Data == null)
+            {
                 return NotFound(result);
+            }
 
             return Ok(result);
         }
@@ -73,7 +75,9 @@ namespace HHMCore.WebAPI.Controllers
         {
             var userId = GetCurrentUserId();
             if (string.IsNullOrEmpty(userId))
+            {
                 return Unauthorized();
+            }
 
             var result = await _studentService.GetMeAsync(userId);
             return result.Success ? Ok(result) : NotFound(result);

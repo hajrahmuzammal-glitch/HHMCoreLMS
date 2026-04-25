@@ -20,7 +20,9 @@ namespace HHMCore.Data.Seeders
             foreach (var role in roles)
             {
                 if (!await roleManager.RoleExistsAsync(role))
+                {
                     await roleManager.CreateAsync(new IdentityRole(role));
+                }
             }
 
             // Step 2 — Create default admin user if not exists
@@ -40,7 +42,9 @@ namespace HHMCore.Data.Seeders
                 var result = await userManager.CreateAsync(admin, "Admin@123456");
 
                 if (result.Succeeded)
+                {
                     await userManager.AddToRoleAsync(admin, "Admin");
+                }
             }
         }
     }

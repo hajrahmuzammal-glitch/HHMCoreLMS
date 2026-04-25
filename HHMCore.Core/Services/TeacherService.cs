@@ -33,19 +33,27 @@ public class TeacherService : ITeacherService
 
         var existingUser = await _userManager.FindByEmailAsync(normalizedEmail);
         if (existingUser is not null)
+        {
             return ApiResponse<TeacherResponseDto>.Fail("A user with this email already exists.");
+        }
 
         var cnicExists = await _unitOfWork.Teachers.ExistsAsync(t => t.Cnic == dto.Cnic);
         if (cnicExists)
+        {
             return ApiResponse<TeacherResponseDto>.Fail("A teacher with this CNIC already exists.");
+        }
 
         var department = await _unitOfWork.Departments.GetByIdAsync(dto.DepartmentId);
         if (department is null)
+        {
             return ApiResponse<TeacherResponseDto>.Fail("Department not found.");
+        }
 
         var designation = await _unitOfWork.Designations.GetByIdAsync(dto.DesignationId);
         if (designation is null)
+        {
             return ApiResponse<TeacherResponseDto>.Fail("Designation not found.");
+        }
 
         var allTeachers = await _unitOfWork.Teachers.GetAllAsync();
         var currentYear = DateTime.UtcNow.Year.ToString();
@@ -117,7 +125,9 @@ public class TeacherService : ITeacherService
                 .GetByIdWithIncludesAsync(teacher.Id, t => t.User, t => t.Department, t => t.Designation);
 
             if (created is null)
+            {
                 return ApiResponse<TeacherResponseDto>.Fail("Teacher created but could not be retrieved.");
+            }
 
             var response = _mapper.Map<TeacherResponseDto>(created);
             return ApiResponse<TeacherResponseDto>.Ok(response, "Teacher created successfully.");
@@ -144,7 +154,9 @@ public class TeacherService : ITeacherService
             .GetByIdWithIncludesAsync(id, t => t.User, t => t.Department, t => t.Designation);
 
         if (teacher is null)
+        {
             return ApiResponse<TeacherResponseDto>.Fail("Teacher not found.");
+        }
 
         var response = _mapper.Map<TeacherResponseDto>(teacher);
         return ApiResponse<TeacherResponseDto>.Ok(response, "Teacher retrieved successfully.");
@@ -158,7 +170,9 @@ public class TeacherService : ITeacherService
                 t => t.User, t => t.Department, t => t.Designation);
 
         if (teacher is null)
+        {
             return ApiResponse<TeacherResponseDto>.Fail("Teacher profile not found.");
+        }
 
         var response = _mapper.Map<TeacherResponseDto>(teacher);
         return ApiResponse<TeacherResponseDto>.Ok(response, "Profile retrieved successfully.");
@@ -168,7 +182,9 @@ public class TeacherService : ITeacherService
     {
         var department = await _unitOfWork.Departments.GetByIdAsync(departmentId);
         if (department is null)
+        {
             return ApiResponse<IReadOnlyList<TeacherResponseDto>>.Fail("Department not found.");
+        }
 
         var teachers = await _unitOfWork.Teachers
             .FindWithIncludesAsync(
@@ -188,7 +204,9 @@ public class TeacherService : ITeacherService
                 t => t.User, t => t.Department, t => t.Designation);
 
         if (teacher is null)
+        {
             return ApiResponse<TeacherResponseDto>.Fail("Teacher profile not found.");
+        }
 
         teacher.PhoneNumber = string.IsNullOrWhiteSpace(dto.PhoneNumber) ? teacher.PhoneNumber : dto.PhoneNumber.Trim();
         teacher.Address = string.IsNullOrWhiteSpace(dto.Address) ? teacher.Address : dto.Address.Trim();
@@ -211,13 +229,17 @@ public class TeacherService : ITeacherService
             .GetByIdWithIncludesAsync(dto.Id, t => t.User, t => t.Department, t => t.Designation);
 
         if (teacher is null)
+        {
             return ApiResponse<TeacherResponseDto>.Fail("Teacher not found.");
+        }
 
         if (dto.DesignationId.HasValue)
         {
             var designation = await _unitOfWork.Designations.GetByIdAsync(dto.DesignationId.Value);
             if (designation is null)
+            {
                 return ApiResponse<TeacherResponseDto>.Fail("Designation not found.");
+            }
         }
 
         if (!string.IsNullOrWhiteSpace(dto.FullName))
@@ -248,7 +270,9 @@ public class TeacherService : ITeacherService
             .GetByIdWithIncludesAsync(teacher.Id, t => t.User, t => t.Department, t => t.Designation);
 
         if (updated is null)
+        {
             return ApiResponse<TeacherResponseDto>.Fail("Teacher updated but could not be retrieved.");
+        }
 
         var response = _mapper.Map<TeacherResponseDto>(updated);
         return ApiResponse<TeacherResponseDto>.Ok(response, "Teacher updated successfully.");
@@ -258,7 +282,9 @@ public class TeacherService : ITeacherService
     {
         var teacher = await _unitOfWork.Teachers.GetByIdAsync(id);
         if (teacher is null)
+        {
             return ApiResponse.Fail("Teacher not found.");
+        }
 
         teacher.UpdatedAt = DateTime.UtcNow;
         teacher.UpdatedBy = deletedBy;

@@ -25,12 +25,16 @@ namespace HHMCore.Core.Services
             var codeExists = await _unitOfWork.Courses.ExistsAsync(
                 c => c.Code.ToUpper() == normalizedCode);
             if (codeExists)
+            {
                 return ApiResponse<CourseResponseDto>.Fail(
                     "A course with this code already exists.");
+            }
 
             var dept = await _unitOfWork.Departments.GetByIdAsync(dto.DepartmentId);
             if (dept == null)
+            {
                 return ApiResponse<CourseResponseDto>.Fail("Department not found.");
+            }
 
             var course = new Course
             {
@@ -70,7 +74,9 @@ namespace HHMCore.Core.Services
                 .GetByIdWithIncludesAsync(id, c => c.Department);
 
             if (course == null)
+            {
                 return ApiResponse<CourseResponseDto>.Fail("Course not found.");
+            }
 
             var mapped = _mapper.Map<CourseResponseDto>(course);
             return ApiResponse<CourseResponseDto>.Ok(mapped, "Course fetched.");
@@ -81,8 +87,10 @@ namespace HHMCore.Core.Services
         {
             var dept = await _unitOfWork.Departments.GetByIdAsync(departmentId);
             if (dept == null)
+            {
                 return ApiResponse<IReadOnlyList<CourseResponseDto>>.Fail(
                     "Department not found.");
+            }
 
             var courses = await _unitOfWork.Courses.FindWithIncludesAsync(
                 c => c.DepartmentId == departmentId,
@@ -99,7 +107,9 @@ namespace HHMCore.Core.Services
                 .GetByIdWithIncludesAsync(id, c => c.Department);
 
             if (course == null)
+            {
                 return ApiResponse<CourseResponseDto>.Fail("Course not found.");
+            }
 
             // Code uniqueness — only check if a new code was actually sent
             if (!string.IsNullOrWhiteSpace(dto.Code))
@@ -108,8 +118,10 @@ namespace HHMCore.Core.Services
                 var codeExists = await _unitOfWork.Courses.ExistsAsync(
                     c => c.Code.ToUpper() == normalizedCode && c.Id != id);
                 if (codeExists)
+                {
                     return ApiResponse<CourseResponseDto>.Fail(
                         "A course with this code already exists.");
+                }
             }
 
             // Department existence — only check if department is being changed
@@ -118,7 +130,9 @@ namespace HHMCore.Core.Services
                 var dept = await _unitOfWork.Departments
                     .GetByIdAsync(dto.DepartmentId.Value);
                 if (dept == null)
+                {
                     return ApiResponse<CourseResponseDto>.Fail("Department not found.");
+                }
             }
 
             // Strings — IsNullOrWhiteSpace catches null, empty, and whitespace
@@ -154,13 +168,17 @@ namespace HHMCore.Core.Services
         {
             var course = await _unitOfWork.Courses.GetByIdAsync(id);
             if (course == null)
+            {
                 return ApiResponse.Fail("Course not found.");
+            }
 
             var hasAssignments = await _unitOfWork.CourseAssignments
                 .ExistsAsync(ca => ca.CourseId == id);
             if (hasAssignments)
+            {
                 return ApiResponse.Fail(
                     "Cannot delete a course that has timetable assignments. Remove assignments first.");
+            }
 
             course.UpdatedAt = DateTime.UtcNow;
             course.UpdatedBy = deletedBy;

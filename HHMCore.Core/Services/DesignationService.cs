@@ -22,7 +22,9 @@ public class DesignationService : IDesignationService
         var exists = await _unitOfWork.Designations.ExistsAsync(
             x => x.Title.ToLower() == dto.Title.ToLower());
         if (exists)
+        {
             return ApiResponse<DesignationResponseDto>.Fail($"Designation '{dto.Title}' already exists.");
+        }
 
         var designation = new Designation
         {
@@ -50,7 +52,9 @@ public class DesignationService : IDesignationService
     {
         var designation = await _unitOfWork.Designations.GetByIdAsync(id);
         if (designation == null)
+        {
             return ApiResponse<DesignationResponseDto>.Fail("Designation not found.");
+        }
 
         var response = _mapper.Map<DesignationResponseDto>(designation);
         return ApiResponse<DesignationResponseDto>.Ok(response, "Designation retrieved successfully.");
@@ -64,7 +68,9 @@ public class DesignationService : IDesignationService
         // Step 1 — Find the existing record. If it's not there, fail immediately.
         var designation = await _unitOfWork.Designations.GetByIdAsync(id);
         if (designation == null)
+        {
             return ApiResponse<DesignationResponseDto>.Fail("Designation not found.");
+        }
 
         // Step 2 — Apply only the fields that were actually sent.
         if (!string.IsNullOrWhiteSpace(dto.Title))
@@ -72,14 +78,18 @@ public class DesignationService : IDesignationService
             var titleExists = await _unitOfWork.Designations.ExistsAsync(
                 d => d.Title.ToLower() == dto.Title.ToLower() && d.Id != id);
             if (titleExists)
+            {
                 return ApiResponse<DesignationResponseDto>.Fail(
                     $"Designation '{dto.Title}' already exists.");
+            }
 
             designation.Title = dto.Title.Trim();
         }
 
         if (!string.IsNullOrWhiteSpace(dto.Description))
+        {
             designation.Description = dto.Description.Trim();
+        }
 
         // Step 3 — Stamp who updated it and when.
         designation.UpdatedAt = DateTime.UtcNow;
@@ -97,11 +107,15 @@ public class DesignationService : IDesignationService
     {
         var designation = await _unitOfWork.Designations.GetByIdAsync(id);
         if (designation == null)
+        {
             return ApiResponse.Fail("Designation not found.");
+        }
 
         var hasTeachers = await _unitOfWork.Teachers.ExistsAsync(x => x.DesignationId == id);
         if (hasTeachers)
+        {
             return ApiResponse.Fail("Cannot delete this designation because teachers are assigned to it.");
+        }
 
         _unitOfWork.Designations.Delete(designation);
         await _unitOfWork.SaveChangesAsync();

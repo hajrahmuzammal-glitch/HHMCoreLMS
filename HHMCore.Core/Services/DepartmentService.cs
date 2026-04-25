@@ -25,7 +25,9 @@ public class DepartmentService : IDepartmentService
             .FindAsync(x => x.Code == dto.Code.ToUpper());
 
         if (existing.Any())
+        {
             return ApiResponse<DepartmentResponseDto>.Fail("A department with this code already exists.");
+        }
 
         var department = new Department
         {
@@ -49,7 +51,9 @@ public class DepartmentService : IDepartmentService
         var department = await _unitOfWork.Departments.GetByIdAsync(id);
 
         if (department == null)
+        {
             return ApiResponse<DepartmentResponseDto>.Fail("Department not found.");
+        }
 
         var response = _mapper.Map<DepartmentResponseDto>(department);
         return ApiResponse<DepartmentResponseDto>.Ok(response);
@@ -71,7 +75,9 @@ public class DepartmentService : IDepartmentService
         // Step 1 — Find the existing record. If it's not there, fail immediately.
         var department = await _unitOfWork.Departments.GetByIdAsync(id);
         if (department == null)
+        {
             return ApiResponse<DepartmentResponseDto>.Fail("Department not found.");
+        }
 
         // Step 2 — Apply only the fields that were actually sent.
         // IsNullOrWhiteSpace catches null, "", and "   " — all three mean "don't change it."
@@ -83,8 +89,10 @@ public class DepartmentService : IDepartmentService
             var nameExists = await _unitOfWork.Departments.ExistsAsync(
                 d => d.Name.ToLower() == dto.Name.ToLower() && d.Id != id);
             if (nameExists)
+            {
                 return ApiResponse<DepartmentResponseDto>.Fail(
                     "A department with this name already exists.");
+            }
 
             department.Name = dto.Name.Trim();
         }
@@ -94,14 +102,18 @@ public class DepartmentService : IDepartmentService
             var codeExists = await _unitOfWork.Departments.ExistsAsync(
                 d => d.Code.ToUpper() == dto.Code.ToUpper() && d.Id != id);
             if (codeExists)
+            {
                 return ApiResponse<DepartmentResponseDto>.Fail(
                     "A department with this code already exists.");
+            }
 
             department.Code = dto.Code.ToUpper().Trim();
         }
 
         if (!string.IsNullOrWhiteSpace(dto.Description))
+        {
             department.Description = dto.Description.Trim();
+        }
 
         // bool? — use ?? because bool cannot be empty string
         department.IsActive = dto.IsActive ?? department.IsActive;
@@ -123,7 +135,9 @@ public class DepartmentService : IDepartmentService
         var department = await _unitOfWork.Departments.GetByIdAsync(id);
 
         if (department == null)
+        {
             return ApiResponse.Fail("Department not found.");
+        }
 
         _unitOfWork.Departments.Delete(department);
         await _unitOfWork.SaveChangesAsync();

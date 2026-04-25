@@ -31,12 +31,16 @@ public class AccountController : ControllerBase
         var validator = new ChangePasswordValidator();
         var validation = await validator.ValidateAsync(dto);
         if (!validation.IsValid)
+        {
             return BadRequest(ApiResponse.Fail(validation.Errors.Select(e => e.ErrorMessage).First()));
+        }
 
         var userId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
         var appUser = await _userManager.FindByIdAsync(userId);
         if (appUser is null)
+        {
             return Unauthorized(ApiResponse.Fail("User not found."));
+        }
 
         var result = await _userManager.ChangePasswordAsync(
             appUser, dto.CurrentPassword, dto.NewPassword);
@@ -60,7 +64,9 @@ public class AccountController : ControllerBase
         var userId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
         var appUser = await _userManager.FindByIdAsync(userId);
         if (appUser is null)
+        {
             return Unauthorized();
+        }
 
         var roles = await _userManager.GetRolesAsync(appUser);
 

@@ -29,7 +29,9 @@ namespace HHMCore.Core.Services
 
             var existingUser = await _userManager.FindByEmailAsync(normalizedEmail);
             if (existingUser != null)
+            {
                 return ApiResponse<AuthResponseDto>.Fail("This email is already registered.");
+            }
 
             var appUser = new AppUser
             {
@@ -79,11 +81,15 @@ namespace HHMCore.Core.Services
 
             // Check null separately — avoids the null reference warning on CheckPasswordAsync
             if (user is null)
+            {
                 return ApiResponse<AuthResponseDto>.Fail("Invalid email or password.");
+            }
 
             var passwordValid = await _userManager.CheckPasswordAsync(user, dto.Password);
             if (!passwordValid)
+            {
                 return ApiResponse<AuthResponseDto>.Fail("Invalid email or password.");
+            }
 
             // GetRolesAsync is safe here — user is confirmed non-null above
             var roles = await _userManager.GetRolesAsync(user);
