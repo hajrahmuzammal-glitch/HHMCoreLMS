@@ -1,4 +1,4 @@
-﻿// HHMCore.Core/Services/CourseAssignmentService.cs
+// HHMCore.Core/Services/CourseAssignmentService.cs
 
 using AutoMapper;
 using HHMCore.Core.Common;
@@ -40,34 +40,40 @@ public class CourseAssignmentService : ICourseAssignmentService
         // 1. Verify Teacher exists and is active
         var teacher = await _unitOfWork.Teachers.GetByIdAsync(dto.TeacherId);
         if (teacher is null || teacher.IsDeleted)
+        {
             return ApiResponse<CourseAssignmentResponseDto>.Fail("Teacher not found.");
-
+        }
         // 2. Verify Course exists, is active, get DepartmentId
         var course = await _unitOfWork.Courses.GetByIdAsync(dto.CourseId);
         if (course is null || course.IsDeleted)
+        {
             return ApiResponse<CourseAssignmentResponseDto>.Fail("Course not found.");
-
+        }
         // 3. Verify Semester exists and is active
         var semester = await _unitOfWork.Semesters.GetByIdAsync(dto.SemesterId);
         if (semester is null || semester.IsDeleted)
+        {
             return ApiResponse<CourseAssignmentResponseDto>.Fail("Semester not found.");
-
+        }
         // 4. Verify Room exists, get capacity for validation
         var room = await _unitOfWork.Rooms.GetByIdAsync(dto.RoomId);
         if (room is null || room.IsDeleted)
+        {
             return ApiResponse<CourseAssignmentResponseDto>.Fail("Room not found.");
-
+        }
         // 5. Verify TimeSlot exists
         var timeSlotExists = await _unitOfWork.TimeSlots.ExistsAsync(
             ts => ts.Id == dto.TimeSlotId && !ts.IsDeleted);
         if (!timeSlotExists)
+        {
             return ApiResponse<CourseAssignmentResponseDto>.Fail("Time slot not found.");
-
+        }
         // 6. MaxEnrollment cannot exceed physical room capacity
         if (dto.MaxEnrollment > room.Capacity)
+        {
             return ApiResponse<CourseAssignmentResponseDto>.Fail(
                 $"Max enrollment ({dto.MaxEnrollment}) cannot exceed room capacity ({room.Capacity}).");
-
+        }
         // 7. CONFLICT RULE 1 — Room already booked at this time in this semester
         var roomConflict = await _unitOfWork.CourseAssignments.ExistsAsync(
             ca => ca.RoomId == dto.RoomId &&
@@ -75,9 +81,10 @@ public class CourseAssignmentService : ICourseAssignmentService
                   ca.SemesterId == dto.SemesterId &&
                   !ca.IsDeleted);
         if (roomConflict)
+        {
             return ApiResponse<CourseAssignmentResponseDto>.Fail(
                 "This room is already booked for this time slot in this semester.");
-
+        }
         // 8. CONFLICT RULE 2 — Teacher already teaching at this time in this semester
         var teacherConflict = await _unitOfWork.CourseAssignments.ExistsAsync(
             ca => ca.TeacherId == dto.TeacherId &&
@@ -85,9 +92,10 @@ public class CourseAssignmentService : ICourseAssignmentService
                   ca.SemesterId == dto.SemesterId &&
                   !ca.IsDeleted);
         if (teacherConflict)
+        {
             return ApiResponse<CourseAssignmentResponseDto>.Fail(
                 "This teacher already has a class at this time slot in this semester.");
-
+        }
         // 9. CONFLICT RULE 3 — Same course already scheduled at this time in this semester
         var courseConflict = await _unitOfWork.CourseAssignments.ExistsAsync(
             ca => ca.CourseId == dto.CourseId &&
@@ -95,9 +103,10 @@ public class CourseAssignmentService : ICourseAssignmentService
                   ca.SemesterId == dto.SemesterId &&
                   !ca.IsDeleted);
         if (courseConflict)
+        {
             return ApiResponse<CourseAssignmentResponseDto>.Fail(
                 "This course is already scheduled at this time slot in this semester.");
-
+        }
         // 10. CONFLICT RULE 4 — Same department + section already has a class at this time
         //     Uses DepartmentId from Course — this is why we fetch Course above
         var sectionConflict = await _unitOfWork.CourseAssignments.ExistsAsync(
@@ -107,9 +116,10 @@ public class CourseAssignmentService : ICourseAssignmentService
                   ca.SemesterId == dto.SemesterId &&
                   !ca.IsDeleted);
         if (sectionConflict)
+        {
             return ApiResponse<CourseAssignmentResponseDto>.Fail(
                 "This section already has a class scheduled at this time slot.");
-
+        }
         // 11. Save — DepartmentId denormalized from Course
         var assignment = new CourseAssignment
         {
@@ -173,9 +183,10 @@ public class CourseAssignmentService : ICourseAssignmentService
             .GetByIdWithDetailsAsync(id, FullIncludes());
 
         if (assignment is null)
+        {
             return ApiResponse<CourseAssignmentResponseDto>.Fail(
                 "Course assignment not found.");
-
+        }
         return ApiResponse<CourseAssignmentResponseDto>.Ok(
             _mapper.Map<CourseAssignmentResponseDto>(assignment),
             "Course assignment fetched.");
@@ -191,9 +202,10 @@ public class CourseAssignmentService : ICourseAssignmentService
         // Fetch existing — need current values to resolve finals and run conflict checks
         var assignment = await _unitOfWork.CourseAssignments.GetByIdAsync(id);
         if (assignment is null)
+        {
             return ApiResponse<CourseAssignmentResponseDto>.Fail(
                 "Course assignment not found.");
-
+        }
         // Resolve final values — null in DTO means keep existing
         var finalTeacherId = dto.TeacherId ?? assignment.TeacherId;
         var finalRoomId = dto.RoomId ?? assignment.RoomId;
@@ -211,7 +223,9 @@ public class CourseAssignmentService : ICourseAssignmentService
             var teacherExists = await _unitOfWork.Teachers.ExistsAsync(
                 t => t.Id == dto.TeacherId && !t.IsDeleted);
             if (!teacherExists)
+            {
                 return ApiResponse<CourseAssignmentResponseDto>.Fail("Teacher not found.");
+            }
         }
 
         if (dto.RoomId.HasValue || dto.MaxEnrollment.HasValue)
@@ -219,11 +233,14 @@ public class CourseAssignmentService : ICourseAssignmentService
             // Fetch room to validate capacity — needed if room OR enrollment changed
             room = await _unitOfWork.Rooms.GetByIdAsync(finalRoomId);
             if (room is null || room.IsDeleted)
+            {
                 return ApiResponse<CourseAssignmentResponseDto>.Fail("Room not found.");
-
+            }
             if (finalMaxEnroll > room.Capacity)
+            {
                 return ApiResponse<CourseAssignmentResponseDto>.Fail(
                     $"Max enrollment ({finalMaxEnroll}) cannot exceed room capacity ({room.Capacity}).");
+            }
         }
 
         if (dto.TimeSlotId.HasValue)
@@ -231,7 +248,9 @@ public class CourseAssignmentService : ICourseAssignmentService
             var timeSlotExists = await _unitOfWork.TimeSlots.ExistsAsync(
                 ts => ts.Id == dto.TimeSlotId && !ts.IsDeleted);
             if (!timeSlotExists)
+            {
                 return ApiResponse<CourseAssignmentResponseDto>.Fail("Time slot not found.");
+            }
         }
 
         // Conflict checks — each runs independently based on what actually changed
@@ -247,8 +266,10 @@ public class CourseAssignmentService : ICourseAssignmentService
                       ca.Id != id &&
                       !ca.IsDeleted);
             if (roomConflict)
+            {
                 return ApiResponse<CourseAssignmentResponseDto>.Fail(
                     "This room is already booked for this time slot in this semester.");
+            }
         }
 
         // CONFLICT RULE 2 — Teacher conflict: run if teacher OR timeslot changed
@@ -261,8 +282,10 @@ public class CourseAssignmentService : ICourseAssignmentService
                       ca.Id != id &&
                       !ca.IsDeleted);
             if (teacherConflict)
+            {
                 return ApiResponse<CourseAssignmentResponseDto>.Fail(
                     "This teacher already has a class at this time slot in this semester.");
+            }
         }
 
         // CONFLICT RULE 3 — Section conflict: run if section OR timeslot changed
@@ -276,8 +299,10 @@ public class CourseAssignmentService : ICourseAssignmentService
                       ca.Id != id &&
                       !ca.IsDeleted);
             if (sectionConflict)
+            {
                 return ApiResponse<CourseAssignmentResponseDto>.Fail(
                     "This section already has a class scheduled at this time slot.");
+            }
         }
 
         // Apply changes
@@ -307,15 +332,17 @@ public class CourseAssignmentService : ICourseAssignmentService
     {
         var assignment = await _unitOfWork.CourseAssignments.GetByIdAsync(id);
         if (assignment is null)
+        {
             return ApiResponse.Fail("Course assignment not found.");
-
+        }
         // Block delete if active attendance records exist
         var hasAttendance = await _unitOfWork.Attendances.ExistsAsync(
             a => a.CourseAssignmentId == id && !a.IsDeleted);
         if (hasAttendance)
+        {
             return ApiResponse.Fail(
                 "Cannot delete — attendance records exist for this assignment. Archive the semester first.");
-
+        }
         assignment.IsDeleted = true;
         assignment.UpdatedAt = DateTime.UtcNow;
         assignment.UpdatedBy = deletedBy;
@@ -333,8 +360,9 @@ public class CourseAssignmentService : ICourseAssignmentService
         var teacherExists = await _unitOfWork.Teachers.ExistsAsync(
             t => t.Id == teacherId && !t.IsDeleted);
         if (!teacherExists)
+        {
             return ApiResponse<IReadOnlyList<CourseAssignmentResponseDto>>.Fail("Teacher not found.");
-
+        }
         var assignments = await _unitOfWork.CourseAssignments
             .FindWithDetailsAsync(
                 ca => ca.TeacherId == teacherId,
