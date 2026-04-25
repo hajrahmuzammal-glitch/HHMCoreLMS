@@ -1,56 +1,85 @@
-﻿using HHMCore.Core.Common;
 using System.Net;
 using System.Text.Json;
+using HHMCore.Core.Common;
 
+namespace HHMCore.WebAPI.Middleware;
 
-namespace HHMCore.WebAPI.Middleware
+public class ExceptionMiddleware
 {
-    public class ExceptionMiddleware
+    private readonly RequestDelegate _next;
+    private readonly ILogger<ExceptionMiddleware> _logger;
+    private readonly IHostEnvironment _env;
+
+    public ExceptionMiddleware(
+        RequestDelegate next,
+        ILogger<ExceptionMiddleware> logger,
+        IHostEnvironment env)
     {
-        private readonly RequestDelegate _next;
-        private readonly ILogger<ExceptionMiddleware> _logger;
+        _next = next;
+        _logger = logger;
+        _env = env;
+    }
 
-        public ExceptionMiddleware(RequestDelegate next, ILogger<ExceptionMiddleware> logger)
+    public async Task InvokeAsync(HttpContext context)
+    {
+        try
         {
-            _next = next;
-            _logger = logger;
+            await _next(context);
+        }
+        catch (Exception ex)
+        {
+            await HandleExceptionAsync(context, ex);
+        }
+    }
+
+    private async Task HandleExceptionAsync(HttpContext context, Exception ex)
+    {
+        var (statusCode, message, logLevel) = ex switch
+        {
+            OperationCanceledException =>
+                (499, "Request was cancelled.", LogLevel.Information),
+
+            UnauthorizedAccessException =>
+                (StatusCodes.Status401Unauthorized, "Unauthorized access.", LogLevel.Error),
+
+            ArgumentNullException =>
+                (StatusCodes.Status400BadRequest, "A required value was missing.", LogLevel.Error),
+
+            ArgumentException =>
+                (StatusCodes.Status400BadRequest, ex.Message, LogLevel.Error),
+
+            _ =>
+                (StatusCodes.Status500InternalServerError, "An unexpected error occurred.", LogLevel.Error)
+        };
+
+        // Log with the correct level — cancelled requests are not errors
+        _logger.Log(
+            logLevel,
+            ex,
+            "Exception at {Method} {Path} — {Message}",
+            context.Request.Method,
+            context.Request.Path,
+            ex.Message);
+
+        // Do not write a response body if the client already disconnected
+        if (context.RequestAborted.IsCancellationRequested && statusCode == 499)
+        {
+            return;
         }
 
-        public async Task InvokeAsync(HttpContext context)
+        context.Response.ContentType = "application/json";
+        context.Response.StatusCode = statusCode;
+
+        var response = ApiResponse.Fail(
+            _env.IsDevelopment() && statusCode == 500
+                ? $"{message} Detail: {ex.Message}"
+                : message);
+
+        var json = JsonSerializer.Serialize(response, new JsonSerializerOptions
         {
-            try
-            {
-                // Pass the request to the next step (controller)
-                await _next(context);
-            }
-            catch (Exception ex)
-            {
-                // Log the full error details for developers
-                _logger.LogError(ex, "Unhandled exception occurred.");
+            PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+        });
 
-                // Return a clean error response to the user
-                await HandleExceptionAsync(context, ex);
-            }
-        }
-
-        private static async Task HandleExceptionAsync(HttpContext context, Exception ex)
-        {
-            context.Response.ContentType = "application/json";
-            context.Response.StatusCode = (int)HttpStatusCode.InternalServerError;
-
-            var response = new ApiResponse
-            {
-                Success = false,
-                Message = ex.Message,
-                Errors = new List<string> { ex.Message }
-            };
-
-            var json = JsonSerializer.Serialize(response, new JsonSerializerOptions
-            {
-                PropertyNamingPolicy = JsonNamingPolicy.CamelCase
-            });
-
-            await context.Response.WriteAsync(json);
-        }
+        await context.Response.WriteAsync(json);
     }
 }
