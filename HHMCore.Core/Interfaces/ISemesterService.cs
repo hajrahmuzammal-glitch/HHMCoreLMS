@@ -1,4 +1,4 @@
-﻿using HHMCore.Core.Common;
+using HHMCore.Core.Common;
 using HHMCore.Core.DTOs.Semester;
 
 namespace HHMCore.Core.Interfaces;
@@ -12,5 +12,5 @@ public interface ISemesterService
     Task<ApiResponse<SemesterResponseDto>> UpdateAsync(Guid id,UpdateSemesterDto dto, string updatedBy);
     Task<ApiResponse<SemesterResponseDto>> ActivateAsync(Guid id, string updatedBy);
     Task<ApiResponse<SemesterResponseDto>> DeactivateAsync(Guid id, string updatedBy);
-    Task<ApiResponse> DeleteAsync(Guid id);
+    Task<ApiResponse> DeleteAsync(Guid id,string deletedBy);
 }

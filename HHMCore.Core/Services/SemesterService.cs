@@ -1,4 +1,4 @@
-﻿using AutoMapper;
+using AutoMapper;
 using HHMCore.Core.Common;
 using HHMCore.Core.DTOs.Semester;
 using HHMCore.Core.Entities;
@@ -20,9 +20,15 @@ public class SemesterService : ISemesterService
     public async Task<ApiResponse<SemesterResponseDto>> CreateAsync(
         CreateSemesterDto dto, string createdBy)
     {
+        dto.Name = dto.Name.Trim();
         var nameExists = await _unitOfWork.Semesters.ExistsAsync(
-            s => s.Name.ToLower() == dto.Name.ToLower().Trim());
+            s => s.Name.ToLower() == dto.Name.ToLower());
 
+        if(dto.EndDate <= dto.StartDate)
+        {
+            return ApiResponse<SemesterResponseDto>.Fail(
+               "End date must be after start date.");
+        }
         if (nameExists)
         {
             return ApiResponse<SemesterResponseDto>.Fail(
@@ -32,10 +38,11 @@ public class SemesterService : ISemesterService
         var semester = new Semester
         {
             Id = Guid.NewGuid(),
-            Name = dto.Name.Trim(),
+            Name = dto.Name,
             StartDate = dto.StartDate.ToUniversalTime(),
             EndDate = dto.EndDate.ToUniversalTime(),
             IsActive = false,
+            SemesterNumber = dto.SemesterNumber,
             CreatedAt = DateTime.UtcNow,
             CreatedBy = createdBy
         };
@@ -109,7 +116,10 @@ public class SemesterService : ISemesterService
             return ApiResponse<SemesterResponseDto>.Fail(
                 "End date must be after start date.");
         }
-
+        if(dto.SemesterNumber.HasValue)
+        {
+            semester.SemesterNumber = dto.SemesterNumber.Value;
+        }
         semester.StartDate = finalStart;
         semester.EndDate = finalEnd;
         semester.UpdatedAt = DateTime.UtcNow;
@@ -175,8 +185,9 @@ public class SemesterService : ISemesterService
             response, "Semester deactivated successfully.");
     }
 
-    public async Task<ApiResponse> DeleteAsync(Guid id)
+    public async Task<ApiResponse> DeleteAsync(Guid id, string deletedBy)
     {
+
         var semester = await _unitOfWork.Semesters.GetByIdAsync(id);
         if (semester == null)
         {
@@ -207,6 +218,15 @@ public class SemesterService : ISemesterService
                 "Cannot delete this semester. Students are enrolled in it.");
         }
 
+        // TODO: Uncomment when FeeRecord module is complete
+        //created to prevent the coruption of the data as when fee records odule exist, the delete will delete the data
+        // of the semseter with having fee records 
+        // var hasFeeRecords = await _unitOfWork.FeeRecords.ExistsAsync(f => f.SemesterId == id);
+        // if (hasFeeRecords)
+        //     return ApiResponse.Fail("Cannot delete this semester. Fee records are linked to it.");
+
+        semester.UpdatedBy = deletedBy;
+        semester.UpdatedAt = DateTime.UtcNow;
         _unitOfWork.Semesters.Delete(semester);
         await _unitOfWork.SaveChangesAsync();
 

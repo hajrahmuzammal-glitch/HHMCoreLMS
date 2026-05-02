@@ -1,4 +1,4 @@
-﻿
+
 
 namespace HHMCore.Core.DTOs.Semester;
 
@@ -10,4 +10,6 @@ public class SemesterResponseDto
     public DateTime EndDate { get; set; }
     public bool IsActive { get; set; }
     public DateTime CreatedAt { get; set; }
+    public int SemesterNumber { get; set; }   
+    public DateTime? UpdatedAt { get; set; }
 }
