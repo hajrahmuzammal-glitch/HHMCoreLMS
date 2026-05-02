@@ -7,19 +7,18 @@ using AutoMapper;
 using HHMCore.Core.DTOs.Student;
 using HHMCore.Core.Entities;
 
-namespace HHMCore.Core.Mappings
+namespace HHMCore.Core.Mappings;
+
+public class StudentMappingProfile : Profile
 {
-    public class StudentMappingProfile : Profile
+    public StudentMappingProfile()
     {
-        public StudentMappingProfile()
-        {
-            CreateMap<Student, StudentResponseDto>()
-                .ForMember(dest => dest.FullName,
-                    opt => opt.MapFrom(src => src.User != null ? src.User.FullName : string.Empty))
-                .ForMember(dest => dest.Email,
-                    opt => opt.MapFrom(src => src.User != null ? src.User.Email : string.Empty))
-                .ForMember(dest => dest.DepartmentName,
-                    opt => opt.MapFrom(src => src.Department != null ? src.Department.Name : string.Empty));
-        }
+        CreateMap<Student, StudentResponseDto>()
+            .ForMember(dest => dest.FullName,
+                opt => opt.MapFrom(src => src.User != null ? src.User.FullName : string.Empty))
+            .ForMember(dest => dest.Email,
+                opt => opt.MapFrom(src => src.User != null ? src.User.Email : string.Empty))
+            .ForMember(dest => dest.DepartmentName,
+                opt => opt.MapFrom(src => src.Department != null ? src.Department.Name : string.Empty));
     }
 }

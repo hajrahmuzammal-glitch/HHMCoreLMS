@@ -7,25 +7,24 @@ using AutoMapper;
 using HHMCore.Core.DTOs.Teacher;
 using HHMCore.Core.Entities;
 
-namespace HHMCore.Core.Mappings
+namespace HHMCore.Core.Mappings;
+
+public class TeacherMappingProfile : Profile
 {
-    public class TeacherMappingProfile : Profile
+    public TeacherMappingProfile()
     {
-        public TeacherMappingProfile()
-        {
-            CreateMap<Teacher, TeacherResponseDto>()
-                .ForMember(dest => dest.FullName,
-                    opt => opt.MapFrom(src => src.User != null ? src.User.FullName : string.Empty))
-                .ForMember(dest => dest.Email,
-                    opt => opt.MapFrom(src => src.User != null ? src.User.Email : string.Empty))
-                .ForMember(dest => dest.UserId,
-                    opt => opt.MapFrom(src => src.UserId))
-                .ForMember(dest => dest.DepartmentName,
-                    opt => opt.MapFrom(src => src.Department != null ? src.Department.Name : string.Empty))
-                .ForMember(dest => dest.DesignationTitle,
-                    opt => opt.MapFrom(src => src.Designation != null ? src.Designation.Title : string.Empty))
-               .ForMember(dest => dest.Gender,
-                    opt => opt.MapFrom(src => src.Gender.ToString()));
-        }
+        CreateMap<Teacher, TeacherResponseDto>()
+            .ForMember(dest => dest.FullName,
+                opt => opt.MapFrom(src => src.User != null ? src.User.FullName : string.Empty))
+            .ForMember(dest => dest.Email,
+                opt => opt.MapFrom(src => src.User != null ? src.User.Email : string.Empty))
+            .ForMember(dest => dest.UserId,
+                opt => opt.MapFrom(src => src.UserId))
+            .ForMember(dest => dest.DepartmentName,
+                opt => opt.MapFrom(src => src.Department != null ? src.Department.Name : string.Empty))
+            .ForMember(dest => dest.DesignationTitle,
+                opt => opt.MapFrom(src => src.Designation != null ? src.Designation.Title : string.Empty))
+           .ForMember(dest => dest.Gender,
+                opt => opt.MapFrom(src => src.Gender.ToString()));
     }
 }

@@ -1,4 +1,5 @@
-﻿using HHMCore.Core.DTOs.Semester;
+using HHMCore.Core.Common;
+using HHMCore.Core.DTOs.Semester;
 using HHMCore.Core.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -19,7 +20,7 @@ public class SemesterController : ControllerBase
     }
 
     [HttpPost]
-    [Authorize(Roles = "Admin")]
+    [Authorize(Roles = AppRoles.Admin)]
     public async Task<IActionResult> Create([FromBody] CreateSemesterDto dto)
     {
         var result = await _semesterService.CreateAsync(dto, GetCurrentUserEmail());
@@ -27,7 +28,7 @@ public class SemesterController : ControllerBase
     }
 
     [HttpGet]
-    [Authorize(Roles = "Admin")]
+    [Authorize(Roles = AppRoles.Admin)]
     public async Task<IActionResult> GetAll()
     {
         var result = await _semesterService.GetAllAsync();
@@ -42,7 +43,7 @@ public class SemesterController : ControllerBase
     }
 
     [HttpGet("{id:guid}")]
-    [Authorize(Roles = "Admin")]
+    [Authorize(Roles = AppRoles.Admin)]
     public async Task<IActionResult> GetById(Guid id)
     {
         var result = await _semesterService.GetByIdAsync(id);
@@ -50,7 +51,7 @@ public class SemesterController : ControllerBase
     }
 
     [HttpPut("{id:guid}")]
-    [Authorize(Roles = "Admin")]
+    [Authorize(Roles = AppRoles.Admin)]
     public async Task<IActionResult> Update(Guid id, [FromBody] UpdateSemesterDto dto)
     {
         
@@ -59,7 +60,7 @@ public class SemesterController : ControllerBase
     }
 
     [HttpPost("{id:guid}/activate")]
-    [Authorize(Roles = "Admin")]
+    [Authorize(Roles = AppRoles.Admin)]
     public async Task<IActionResult> Activate(Guid id)
     {
         var result = await _semesterService.ActivateAsync(id, GetCurrentUserEmail());
@@ -67,7 +68,7 @@ public class SemesterController : ControllerBase
     }
 
     [HttpPost("{id:guid}/deactivate")]
-    [Authorize(Roles = "Admin")]
+    [Authorize(Roles = AppRoles.Admin)]
     public async Task<IActionResult> Deactivate(Guid id)
     {
         var result = await _semesterService.DeactivateAsync(id, GetCurrentUserEmail());
@@ -75,10 +76,11 @@ public class SemesterController : ControllerBase
     }
 
     [HttpDelete("{id:guid}")]
-    [Authorize(Roles = "Admin")]
+    [Authorize(Roles = AppRoles.Admin)]
     public async Task<IActionResult> Delete(Guid id)
     {
-        var result = await _semesterService.DeleteAsync(id);
+        var deletedBy = User.FindFirstValue(ClaimTypes.Email) ?? "system";
+        var result = await _semesterService.DeleteAsync(id, deletedBy);
         return result.Success ? Ok(result) : BadRequest(result);
     }
 

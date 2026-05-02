@@ -1,4 +1,5 @@
-﻿using HHMCore.Core.DTOs.CourseAssignment;
+using HHMCore.Core.Common;
+using HHMCore.Core.DTOs.CourseAssignment;
 using HHMCore.Core.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -19,7 +20,7 @@ public class CourseAssignmentController : ControllerBase
     }
 
     [HttpPost]
-    [Authorize(Roles = "Admin")]
+    [Authorize(Roles = AppRoles.Admin)]
     public async Task<IActionResult> Create([FromBody] CreateCourseAssignmentDto dto)
     {
         var result = await _courseAssignmentService.CreateAsync(dto, GetCurrentUserEmail());
@@ -27,7 +28,7 @@ public class CourseAssignmentController : ControllerBase
     }
 
     [HttpGet]
-    [Authorize(Roles = "Admin")]
+    [Authorize(Roles = AppRoles.Admin)]
     public async Task<IActionResult> GetAll()
     {
         var result = await _courseAssignmentService.GetAllAsync();
@@ -51,7 +52,7 @@ public class CourseAssignmentController : ControllerBase
     }
 
     [HttpGet("teacher/{teacherId:guid}")]
-    [Authorize(Roles = "Admin")]
+    [Authorize(Roles = AppRoles.Admin)]
     public async Task<IActionResult> GetByTeacher(Guid teacherId)
     {
         var result = await _courseAssignmentService.GetByTeacherAsync(teacherId);
@@ -59,7 +60,7 @@ public class CourseAssignmentController : ControllerBase
     }
 
     [HttpGet("my")]
-    [Authorize(Roles = "Teacher")]
+    [Authorize(Roles = AppRoles.Teacher)]
     public async Task<IActionResult> GetMyAssignments()
     {
         var result = await _courseAssignmentService.GetMyAssignmentsAsync(GetCurrentUserId());
@@ -67,7 +68,7 @@ public class CourseAssignmentController : ControllerBase
     }
 
     [HttpPut("{id:guid}")]
-    [Authorize(Roles = "Admin")]
+    [Authorize(Roles = AppRoles.Admin)]
     public async Task<IActionResult> Update(Guid id, [FromBody] UpdateCourseAssignmentDto dto)
     {
         var result = await _courseAssignmentService.UpdateAsync(id, dto, GetCurrentUserEmail());
@@ -75,7 +76,7 @@ public class CourseAssignmentController : ControllerBase
     }
 
     [HttpDelete("{id:guid}")]
-    [Authorize(Roles = "Admin")]
+    [Authorize(Roles = AppRoles.Admin)]
     public async Task<IActionResult> Delete(Guid id)
     {
         var result = await _courseAssignmentService.DeleteAsync(id, GetCurrentUserEmail());

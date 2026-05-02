@@ -20,7 +20,7 @@ public class CourseController : ControllerBase
     }
 
     [HttpPost]
-    [Authorize(Roles = "Admin")]
+    [Authorize(Roles = AppRoles.Admin)]
     public async Task<IActionResult> Create([FromBody] CreateCourseDto dto)
     {
         var result = await _courseService.CreateAsync(dto, GetCurrentUser());
@@ -49,7 +49,7 @@ public class CourseController : ControllerBase
     }
 
     [HttpPut("{id:guid}")]
-    [Authorize(Roles = "Admin")]
+    [Authorize(Roles = AppRoles.Admin)]
     public async Task<IActionResult> Update(Guid id, [FromBody] UpdateCourseDto dto)
     {
         var result = await _courseService.UpdateAsync(id, dto, GetCurrentUser());
@@ -57,7 +57,7 @@ public class CourseController : ControllerBase
     }
 
     [HttpDelete("{id:guid}")]
-    [Authorize(Roles = "Admin")]
+    [Authorize(Roles = AppRoles.Admin)]
     public async Task<IActionResult> Delete(Guid id)
     {
         var deletedBy = User.FindFirstValue(ClaimTypes.Email) ?? "system";

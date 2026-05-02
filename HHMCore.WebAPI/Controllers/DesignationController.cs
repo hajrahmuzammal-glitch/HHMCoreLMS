@@ -1,4 +1,5 @@
-﻿using HHMCore.Core.DTOs.Designation;
+using HHMCore.Core.Common;
+using HHMCore.Core.DTOs.Designation;
 using HHMCore.Core.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -8,7 +9,7 @@ namespace HHMCore.WebAPI.Controllers;
 
 [ApiController]
 [Route("api/designations")]
-[Authorize(Roles = "Admin")]
+[Authorize(Roles = AppRoles.Admin)]
 public class DesignationController : ControllerBase
 {
     private readonly IDesignationService _designationService;

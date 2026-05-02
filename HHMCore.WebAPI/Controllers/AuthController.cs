@@ -5,50 +5,49 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 
-namespace HHMCore.WebAPI.Controllers
+namespace HHMCore.WebAPI.Controllers;
+
+[ApiController]
+[Route("api/[controller]")]
+public class AuthController : ControllerBase
 {
-    [ApiController]
-    [Route("api/[controller]")]
-    public class AuthController : ControllerBase
+    private readonly IAuthService _authService;
+
+    public AuthController(IAuthService authService)
     {
-        private readonly IAuthService _authService;
+        _authService = authService;
+    }
 
-        public AuthController(IAuthService authService)
+    [HttpPost("register")]
+    public async Task<ActionResult<ApiResponse<AuthResponseDto>>> Register([FromBody] RegisterDto dto)
+    {
+        var result = await _authService.RegisterAsync(dto);
+
+        return Ok(result);
+    }
+
+    [HttpPost("login")]
+    public async Task<ActionResult<ApiResponse<AuthResponseDto>>> Login([FromBody] LoginDto dto)
+    {
+        var result = await _authService.LoginAsync(dto);
+
+        return Ok(result);
+    }
+
+    [HttpGet("me")]
+    [Authorize]
+    public ActionResult<ApiResponse<object>> Me()
+    {
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        var email = User.FindFirstValue(ClaimTypes.Email);
+        var role = User.FindFirstValue(ClaimTypes.Role);
+        var name = User.FindFirstValue(ClaimTypes.Name);
+
+        return Ok(new ApiResponse<object>
         {
-            _authService = authService;
-        }
-
-        [HttpPost("register")]
-        public async Task<ActionResult<ApiResponse<AuthResponseDto>>> Register([FromBody] RegisterDto dto)
-        {
-            var result = await _authService.RegisterAsync(dto);
-
-            return Ok(result);
-        }
-
-        [HttpPost("login")]
-        public async Task<ActionResult<ApiResponse<AuthResponseDto>>> Login([FromBody] LoginDto dto)
-        {
-            var result = await _authService.LoginAsync(dto);
-
-            return Ok(result);
-        }
-
-        [HttpGet("me")]
-        [Authorize]
-        public ActionResult<ApiResponse<object>> Me()
-        {
-            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            var email = User.FindFirstValue(ClaimTypes.Email);
-            var role = User.FindFirstValue(ClaimTypes.Role);
-            var name = User.FindFirstValue(ClaimTypes.Name);
-
-            return Ok(new ApiResponse<object>
-            {
-                Success = true,
-                Message = "Token is valid.",
-                Data = new { userId, email, role, name }
-            });
-        }
+            Success = true,
+            Message = "Token is valid.",
+            Data = new { userId, email, role, name }
+        });
     }
 }

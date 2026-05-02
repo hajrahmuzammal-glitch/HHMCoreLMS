@@ -2,17 +2,16 @@
 using HHMCore.Core.DTOs.Role;
 using HHMCore.Core.DTOs.Room;
 
-namespace HHMCore.Core.Interfaces
+namespace HHMCore.Core.Interfaces;
+
+public interface IRoleService
 {
-    public interface IRoleService
-    {
-        // Create a new role — Admin only, audited
-        Task<ApiResponse<RoleResponseDto>> CreateAsync(CreateRoleDto dto, string createdBy);
+    // Create a new role — Admin only, audited
+    Task<ApiResponse<RoleResponseDto>> CreateAsync(CreateRoleDto dto, string createdBy);
 
-        // Get all roles in the system
-        Task<ApiResponse<List<RoleResponseDto>>> GetAllAsync();
+    // Get all roles in the system
+    Task<ApiResponse<List<RoleResponseDto>>> GetAllAsync();
 
-        // Delete a role — blocked if any users are assigned to it
-        Task<ApiResponse> DeleteAsync(string roleName, string deletedBy);
-    }
+    // Delete a role — blocked if any users are assigned to it
+    Task<ApiResponse> DeleteAsync(string roleName, string deletedBy);
 }

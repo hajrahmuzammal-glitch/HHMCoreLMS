@@ -1,4 +1,4 @@
-﻿namespace HHMCore.Core.Services;
+namespace HHMCore.Core.Services;
 
 using AutoMapper;
 using HHMCore.Core.Common;
@@ -64,7 +64,7 @@ public class StudentService : IStudentService
             return ApiResponse<StudentResponseDto>.Fail("Failed to create account.", errors);
         }
 
-        var roleResult = await _userManager.AddToRoleAsync(appUser, "Student");
+        var roleResult = await _userManager.AddToRoleAsync(appUser, AppRoles.Student);
         if (!roleResult.Succeeded)
         {
             await _userManager.DeleteAsync(appUser);
@@ -97,7 +97,7 @@ public class StudentService : IStudentService
                 appUser.FullName,
                 appUser.Email!,
                 dto.Password,
-                "Student");
+                AppRoles.Student);
 
             var created = await _unitOfWork.Students
                 .GetByIdWithIncludesAsync(student.Id, s => s.User, s => s.Department);

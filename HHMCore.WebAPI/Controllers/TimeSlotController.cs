@@ -1,4 +1,5 @@
-﻿using HHMCore.Core.DTOs.TimeSlot;
+using HHMCore.Core.Common;
+using HHMCore.Core.DTOs.TimeSlot;
 using HHMCore.Core.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -22,7 +23,7 @@ public class TimeSlotController : ControllerBase
         User.FindFirstValue(ClaimTypes.Email) ?? "system";
 
     [HttpPost]
-    [Authorize(Roles = "Admin")]
+    [Authorize(Roles = AppRoles.Admin)]
     public async Task<IActionResult> Create([FromBody] CreateTimeSlotDto dto)
     {
         var result = await _timeSlotService.CreateAsync(dto, GetCurrentUserEmail());
@@ -30,7 +31,7 @@ public class TimeSlotController : ControllerBase
     }
 
     [HttpGet]
-    [Authorize(Roles = "Admin")]
+    [Authorize(Roles = AppRoles.Admin)]
     public async Task<IActionResult> GetAll()
     {
         var result = await _timeSlotService.GetAllAsync();
@@ -38,7 +39,7 @@ public class TimeSlotController : ControllerBase
     }
 
     [HttpGet("{id:guid}")]
-    [Authorize(Roles = "Admin")]
+    [Authorize(Roles = AppRoles.Admin)]
     public async Task<IActionResult> GetById(Guid id)
     {
         var result = await _timeSlotService.GetByIdAsync(id);
@@ -46,7 +47,7 @@ public class TimeSlotController : ControllerBase
     }
 
     [HttpPut("{id:guid}")]
-    [Authorize(Roles = "Admin")]
+    [Authorize(Roles = AppRoles.Admin)]
     public async Task<IActionResult> Update(Guid id, [FromBody] UpdateTimeSlotDto dto)
     {
         var result = await _timeSlotService.UpdateAsync(id, dto, GetCurrentUserEmail());
@@ -54,7 +55,7 @@ public class TimeSlotController : ControllerBase
     }
 
     [HttpDelete("{id:guid}")]
-    [Authorize(Roles = "Admin")]
+    [Authorize(Roles = AppRoles.Admin)]
     public async Task<IActionResult> Delete(Guid id)
     {
         var result = await _timeSlotService.DeleteAsync(id, GetCurrentUserEmail());

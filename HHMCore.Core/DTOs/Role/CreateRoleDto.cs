@@ -1,7 +1,6 @@
-﻿namespace HHMCore.Core.DTOs.Role
+﻿namespace HHMCore.Core.DTOs.Role;
+
+public class CreateRoleDto
 {
-    public class CreateRoleDto
-    {
-        public string Name { get; set; } = string.Empty;
-    }
+    public string Name { get; set; } = string.Empty;
 }

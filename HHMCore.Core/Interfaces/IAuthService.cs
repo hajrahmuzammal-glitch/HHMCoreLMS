@@ -6,11 +6,10 @@ using System.Threading.Tasks;
 using HHMCore.Core.Common;
 using HHMCore.Core.DTOs.Auth;
 
-namespace HHMCore.Core.Interfaces
+namespace HHMCore.Core.Interfaces;
+
+public interface IAuthService
 {
-    public interface IAuthService
-    {
-        Task<ApiResponse<AuthResponseDto>> RegisterAsync(RegisterDto dto);
-        Task<ApiResponse<AuthResponseDto>> LoginAsync(LoginDto dto);
-    }
+    Task<ApiResponse<AuthResponseDto>> RegisterAsync(RegisterDto dto);
+    Task<ApiResponse<AuthResponseDto>> LoginAsync(LoginDto dto);
 }

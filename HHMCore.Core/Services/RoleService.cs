@@ -1,11 +1,11 @@
-﻿using HHMCore.Core.Common;
+using HHMCore.Core.Common;
 using HHMCore.Core.DTOs.Role;
 using HHMCore.Core.Interfaces;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
-namespace HHMCore.Core.Services
-{
+namespace HHMCore.Core.Services;
+
     public class RoleService : IRoleService
     {
         private readonly RoleManager<IdentityRole> _roleManager;
@@ -98,4 +98,3 @@ namespace HHMCore.Core.Services
             return ApiResponse.Ok($"Role '{roleName}' deleted successfully.");
         }
     }
-}

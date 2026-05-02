@@ -6,16 +6,15 @@ using System.Threading.Tasks;
 using HHMCore.Core.Common;
 using HHMCore.Core.DTOs.Student;
 
-namespace HHMCore.Core.Interfaces
+namespace HHMCore.Core.Interfaces;
+
+public interface IStudentService
 {
-    public interface IStudentService
-    {
-        Task<ApiResponse<StudentResponseDto>> CreateAsync(CreateStudentDto dto, string createdBy);
-        Task<ApiResponse<StudentResponseDto>> GetByIdAsync(Guid id);
-        Task<ApiResponse<IReadOnlyList<StudentResponseDto>>> GetAllAsync();
-        Task<ApiResponse<StudentResponseDto>> UpdateAsync(Guid id,UpdateStudentDto dto, string updatedBy);
-        Task<ApiResponse<StudentResponseDto>> GetMeAsync(string userId);
-        Task<ApiResponse> DeleteAsync(Guid id, string deletedBy);
-       
-    }
+    Task<ApiResponse<StudentResponseDto>> CreateAsync(CreateStudentDto dto, string createdBy);
+    Task<ApiResponse<StudentResponseDto>> GetByIdAsync(Guid id);
+    Task<ApiResponse<IReadOnlyList<StudentResponseDto>>> GetAllAsync();
+    Task<ApiResponse<StudentResponseDto>> UpdateAsync(Guid id,UpdateStudentDto dto, string updatedBy);
+    Task<ApiResponse<StudentResponseDto>> GetMeAsync(string userId);
+    Task<ApiResponse> DeleteAsync(Guid id, string deletedBy);
+   
 }

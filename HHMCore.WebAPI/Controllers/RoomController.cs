@@ -1,4 +1,5 @@
-﻿using HHMCore.Core.DTOs.Room;
+using HHMCore.Core.Common;
+using HHMCore.Core.DTOs.Room;
 using HHMCore.Core.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -23,7 +24,7 @@ public class RoomController : ControllerBase
 
     // POST /api/rooms — Admin only
     [HttpPost]
-    [Authorize(Roles = "Admin")]
+    [Authorize(Roles = AppRoles.Admin)]
     public async Task<IActionResult> Create([FromBody] CreateRoomDto dto)
     {
         var result = await _roomService.CreateAsync(dto, GetCurrentUserEmail());
@@ -32,7 +33,7 @@ public class RoomController : ControllerBase
 
     // POST /api/rooms/bulk — Admin only
     [HttpPost("bulk")]
-    [Authorize(Roles = "Admin")]
+    [Authorize(Roles = AppRoles.Admin)]
     public async Task<IActionResult> CreateBulk([FromBody] List<CreateRoomDto> dtos)
     {
         var result = await _roomService.CreateBulkAsync(dtos, GetCurrentUserEmail());
@@ -65,7 +66,7 @@ public class RoomController : ControllerBase
 
     // PUT /api/rooms/{id} — Admin only
     [HttpPut("{id:guid}")]
-    [Authorize(Roles = "Admin")]
+    [Authorize(Roles = AppRoles.Admin)]
     public async Task<IActionResult> Update(Guid id, [FromBody] UpdateRoomDto dto)
     {
         var result = await _roomService.UpdateAsync(id, dto, GetCurrentUserEmail());
@@ -73,7 +74,7 @@ public class RoomController : ControllerBase
     }
 
     [HttpDelete("{id:guid}")]
-    [Authorize(Roles = "Admin")]
+    [Authorize(Roles = AppRoles.Admin)]
     public async Task<IActionResult> Delete(Guid id)
     {
         var result = await _roomService.DeleteAsync(id, GetCurrentUserEmail());
