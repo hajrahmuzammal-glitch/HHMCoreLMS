@@ -1,4 +1,3 @@
-namespace HHMCore.Core.Services;
 
 using AutoMapper;
 using HHMCore.Core.Common;
@@ -7,6 +6,7 @@ using HHMCore.Core.Entities;
 using HHMCore.Core.Interfaces;
 using Microsoft.AspNetCore.Identity;
 
+namespace HHMCore.Core.Services;
 public class StudentService : IStudentService
 {
     private readonly IUnitOfWork _unitOfWork;
@@ -83,7 +83,7 @@ public class StudentService : IStudentService
                 PhoneNumber = dto.PhoneNumber.Trim(),
                 Address = dto.Address.Trim(),
                 DateOfBirth = dto.DateOfBirth,
-                Status = "Active",
+                Status = StudentStatus.Active,
                 CreatedBy = createdBy,
                 CreatedAt = DateTime.UtcNow
             };
@@ -105,7 +105,7 @@ public class StudentService : IStudentService
             var response = _mapper.Map<StudentResponseDto>(created);
             return ApiResponse<StudentResponseDto>.Ok(response, "Student created successfully.");
         }
-        catch
+        catch (Exception ex)
         {
             await _userManager.DeleteAsync(appUser);
             return ApiResponse<StudentResponseDto>.Fail("Failed to create student profile. Please try again.");

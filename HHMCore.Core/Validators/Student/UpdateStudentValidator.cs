@@ -1,4 +1,5 @@
-﻿using FluentValidation;
+using FluentValidation;
+using HHMCore.Core.Common;
 using HHMCore.Core.DTOs.Student;
 
 namespace HHMCore.Core.Validators.Student;
@@ -19,9 +20,12 @@ public class UpdateStudentValidator : AbstractValidator<UpdateStudentDto>
             .When(x => x.PhoneNumber != null);
 
         RuleFor(x => x.DateOfBirth)
-            .Must(dob => dob < DateTime.UtcNow.AddYears(-15))
+            .Must(dob => dob!.Value < DateTime.UtcNow.AddYears(-15))
             .WithMessage("Student must be at least 15 years old.")
-            .Must(dob => dob >= new DateTime(1950, 1, 1))
+            .When(x => x.DateOfBirth.HasValue);
+
+        RuleFor(x => x.DateOfBirth)
+            .Must(dob => dob!.Value >= new DateTime(1950, 1, 1))
             .WithMessage("Date of birth cannot be before 1950.")
             .When(x => x.DateOfBirth.HasValue);
 
@@ -32,5 +36,10 @@ public class UpdateStudentValidator : AbstractValidator<UpdateStudentDto>
         RuleFor(x => x.DepartmentId)
             .Must(id => id != Guid.Empty).WithMessage("A valid Department ID is required.")
             .When(x => x.DepartmentId.HasValue);
+
+        RuleFor(x => x.Status)
+            .Must(s => s == StudentStatus.Active || s == StudentStatus.Inactive || s == StudentStatus.Suspended)
+            .WithMessage("Status must be Active, Inactive, or Suspended.")
+            .When(x => x.Status != null);
     }
 }

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -37,26 +37,19 @@ public class CreateStudentValidator : AbstractValidator<CreateStudentDto>
         RuleFor(x => x.CurrentSemesterNumber)
             .InclusiveBetween(1, 8).WithMessage("Semester number must be between 1 and 8.");
 
-        // Pakistani mobile numbers — must start with 03 followed by 9 digits
         RuleFor(x => x.PhoneNumber)
-           .NotEmpty().WithMessage("Phone Number is required.")
+            .NotEmpty().WithMessage("Phone number is required.")
             .Matches(@"^03[0-9]{9}$")
-            .WithMessage("Phone number must be a valid Pakistani number (e.g. 03001234567).")
-            .When(x => !string.IsNullOrWhiteSpace(x.PhoneNumber));
+            .WithMessage("Phone number must be a valid Pakistani number (e.g. 03001234567).");
 
         RuleFor(x => x.DateOfBirth)
-            .NotEmpty().WithMessage("Date of birth is required.")
             .Must(dob => dob < DateTime.UtcNow.AddYears(-15))
             .WithMessage("Student must be at least 15 years old.")
             .Must(dob => dob >= new DateTime(1950, 1, 1))
             .WithMessage("Date of birth cannot be before 1950.");
 
         RuleFor(x => x.Address)
-.NotEmpty()
-.WithMessage("Address is required.")
-.Must(a => !string.IsNullOrWhiteSpace(a))
-.WithMessage("Valid Address is required!.")
-.MaximumLength(250)
-.WithMessage("Address cannot exceed 350 characters.");
+            .NotEmpty().WithMessage("Address is required.")
+            .MaximumLength(250).WithMessage("Address cannot exceed 250 characters.");
     }
 }
