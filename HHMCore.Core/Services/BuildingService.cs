@@ -1,4 +1,4 @@
-﻿using AutoMapper;
+using AutoMapper;
 using HHMCore.Core.Common;
 using HHMCore.Core.DTOs.Building;
 using HHMCore.Core.Entities;
@@ -58,11 +58,11 @@ public class BuildingService : IBuildingService
         return ApiResponse<BuildingResponseDto>.Ok(mapped, "Building created successfully.");
     }
 
-    public async Task<ApiResponse<List<BuildingResponseDto>>> GetAllAsync()
+    public async Task<ApiResponse<IReadOnlyList<BuildingResponseDto>>> GetAllAsync()
     {
         var buildings = await _unitOfWork.Buildings.GetAllWithIncludesAsync(b => b.Rooms);
-        var mapped = _mapper.Map<List<BuildingResponseDto>>(buildings);
-        return ApiResponse<List<BuildingResponseDto>>.Ok(mapped, "Buildings fetched.");
+        var mapped = _mapper.Map<IReadOnlyList<BuildingResponseDto>>(buildings);
+        return ApiResponse<IReadOnlyList<BuildingResponseDto>>.Ok(mapped, "Buildings fetched.");
     }
 
     public async Task<ApiResponse<BuildingResponseDto>> GetByIdAsync(Guid id)

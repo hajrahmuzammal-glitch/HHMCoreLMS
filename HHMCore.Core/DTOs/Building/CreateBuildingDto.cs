@@ -1,8 +1,8 @@
-﻿namespace HHMCore.Core.DTOs.Building;
+namespace HHMCore.Core.DTOs.Building;
 
 public class CreateBuildingDto
 {
     public string Name { get; set; } = string.Empty;
-    public string? Code { get; set; }
+    public string Code { get; set; } = string.Empty;
     public string? Description { get; set; }
 }

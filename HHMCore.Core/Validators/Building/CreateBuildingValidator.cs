@@ -1,4 +1,4 @@
-﻿using FluentValidation;
+using FluentValidation;
 using HHMCore.Core.DTOs.Building;
 
 namespace HHMCore.Core.Validators.Building;
@@ -13,9 +13,9 @@ public class CreateBuildingValidator : AbstractValidator<CreateBuildingDto>
             .MaximumLength(100).WithMessage("Name cannot exceed 100 characters.");
 
         RuleFor(x => x.Code)
+            .NotEmpty().WithMessage("Building code is required.")
             .MaximumLength(10).WithMessage("Code cannot exceed 10 characters.")
-            .Matches(@"^[A-Za-z0-9\-]+$").WithMessage("Code can only contain letters, numbers, and hyphens.")
-            .When(x => x.Code != null);
+            .Matches(@"^[A-Za-z0-9\-]+$").WithMessage("Code can only contain letters, numbers, and hyphens.");
 
         RuleFor(x => x.Description)
             .MaximumLength(500).WithMessage("Description cannot exceed 500 characters.")
