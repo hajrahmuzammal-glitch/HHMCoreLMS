@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -14,5 +14,5 @@ public interface IDepartmentService
     Task<ApiResponse<DepartmentResponseDto>> GetByIdAsync(Guid id);
     Task<ApiResponse<IReadOnlyList<DepartmentResponseDto>>> GetAllAsync();
     Task<ApiResponse<DepartmentResponseDto>> UpdateAsync(Guid id,UpdateDepartmentDto dto, string updatedBy);
-    Task<ApiResponse> DeleteAsync(Guid id);
+    Task<ApiResponse> DeleteAsync(Guid id, string deletedBy);
 }

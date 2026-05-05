@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -20,7 +20,7 @@ public class UpdateDepartmentValidator : AbstractValidator<UpdateDepartmentDto>
         RuleFor(x => x.Code)
             .NotEmpty().WithMessage("Department code cannot be empty.")
             .MaximumLength(10).WithMessage("Code cannot exceed 10 characters.")
-            .Matches("^[a-zA-Z]+$").WithMessage("Code must contain letters only.")
+            .Matches("^[a-zA-Z0-9]+$").WithMessage("Code must contain letters and numbers only.")
             .When(x => !string.IsNullOrWhiteSpace(x.Code));
 
         RuleFor(x => x.Description)

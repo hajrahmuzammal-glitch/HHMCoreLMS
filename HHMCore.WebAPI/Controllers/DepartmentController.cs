@@ -58,7 +58,8 @@ public class DepartmentController : ControllerBase
     [Authorize(Roles = AppRoles.Admin)]
     public async Task<IActionResult> Delete(Guid id)
     {
-        var result = await _departmentService.DeleteAsync(id);
+        var deletedBy = User.FindFirstValue(ClaimTypes.Email) ?? "system";
+        var result = await _departmentService.DeleteAsync(id, deletedBy);
         return result.Success ? Ok(result) : NotFound(result);
     }
 }
