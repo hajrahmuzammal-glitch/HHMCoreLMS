@@ -9,8 +9,8 @@ public interface ISemesterService
     Task<ApiResponse<IReadOnlyList<SemesterResponseDto>>> GetAllAsync();
     Task<ApiResponse<SemesterResponseDto>> GetByIdAsync(Guid id);
     Task<ApiResponse<IReadOnlyList<SemesterResponseDto>>> GetActiveAsync();
-    Task<ApiResponse<SemesterResponseDto>> UpdateAsync(Guid id,UpdateSemesterDto dto, string updatedBy);
+    Task<ApiResponse<SemesterResponseDto>> UpdateAsync(Guid id, UpdateSemesterDto dto, string updatedBy);
     Task<ApiResponse<SemesterResponseDto>> ActivateAsync(Guid id, string updatedBy);
     Task<ApiResponse<SemesterResponseDto>> DeactivateAsync(Guid id, string updatedBy);
-    Task<ApiResponse> DeleteAsync(Guid id,string deletedBy);
+    Task<ApiResponse> DeleteAsync(Guid id, string deletedBy);
 }

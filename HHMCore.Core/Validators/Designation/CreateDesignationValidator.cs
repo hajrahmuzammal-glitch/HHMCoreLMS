@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using FluentValidation;
+﻿using FluentValidation;
 using HHMCore.Core.DTOs.Designation;
 
 namespace HHMCore.Core.Validators.Designation;

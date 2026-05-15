@@ -1,5 +1,6 @@
 ﻿namespace HHMCore.API.Controllers;
 
+using System.Security.Claims;
 using HHMCore.Core.Common;
 using HHMCore.Core.DTOs.Auth;
 using HHMCore.Core.Entities;
@@ -7,7 +8,6 @@ using HHMCore.Core.Validators;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using System.Security.Claims;
 
 [ApiController]
 [Route("api/account")]

@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace HHMCore.Core.DTOs.Designation;
+﻿namespace HHMCore.Core.DTOs.Designation;
 
 public class UpdateDesignationDto
 {

@@ -1,9 +1,9 @@
+using System.Security.Claims;
 using HHMCore.Core.Common;
 using HHMCore.Core.DTOs.Semester;
 using HHMCore.Core.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using System.Security.Claims;
 
 namespace HHMCore.WebAPI.Controllers;
 
@@ -54,8 +54,8 @@ public class SemesterController : ControllerBase
     [Authorize(Roles = AppRoles.Admin)]
     public async Task<IActionResult> Update(Guid id, [FromBody] UpdateSemesterDto dto)
     {
-        
-        var result = await _semesterService.UpdateAsync(id,dto, GetCurrentUserEmail());
+
+        var result = await _semesterService.UpdateAsync(id, dto, GetCurrentUserEmail());
         return result.Success ? Ok(result) : BadRequest(result);
     }
 

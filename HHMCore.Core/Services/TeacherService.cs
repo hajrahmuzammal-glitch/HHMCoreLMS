@@ -5,6 +5,7 @@ using HHMCore.Core.Common;
 using HHMCore.Core.DTOs.Teacher;
 using HHMCore.Core.Entities;
 using HHMCore.Core.Interfaces;
+using HHMCore.Core.Mappings;
 using Microsoft.AspNetCore.Identity;
 
 public class TeacherService : ITeacherService

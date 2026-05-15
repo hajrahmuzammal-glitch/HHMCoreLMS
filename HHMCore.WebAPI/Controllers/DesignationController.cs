@@ -1,9 +1,9 @@
+using System.Security.Claims;
 using HHMCore.Core.Common;
 using HHMCore.Core.DTOs.Designation;
 using HHMCore.Core.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using System.Security.Claims;
 
 namespace HHMCore.WebAPI.Controllers;
 
@@ -43,7 +43,7 @@ public class DesignationController : ControllerBase
     [HttpPut("{id:guid}")]
     public async Task<IActionResult> Update(Guid id, [FromBody] UpdateDesignationDto dto)
     {
-        var result = await _designationService.UpdateAsync(id,dto, GetCurrentUserEmail());
+        var result = await _designationService.UpdateAsync(id, dto, GetCurrentUserEmail());
         return result.Success ? Ok(result) : BadRequest(result);
     }
 

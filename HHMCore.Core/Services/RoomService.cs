@@ -45,7 +45,7 @@ public class RoomService : IRoomService
             CreatedAt = DateTime.UtcNow,
             CreatedBy = createdBy
         };
-        
+
         await _unitOfWork.Rooms.AddAsync(room);
         await _unitOfWork.SaveChangesAsync();
         var saved = await _unitOfWork.Rooms.GetByIdWithIncludesAsync(room.Id, r => r.Building);

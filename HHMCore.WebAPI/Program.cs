@@ -1,4 +1,5 @@
 
+using System.Text;
 using FluentValidation;
 using FluentValidation.AspNetCore;
 using HHMCore.Core.Common;
@@ -14,13 +15,9 @@ using HHMCore.WebAPI.Middleware;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
-using Microsoft.OpenApi;
 using Microsoft.OpenApi.Models;
 using Serilog;
-using System;
-using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 

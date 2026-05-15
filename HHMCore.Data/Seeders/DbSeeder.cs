@@ -11,7 +11,7 @@ public static class DbSeeder
         RoleManager<IdentityRole> roleManager)
     {
         // Step 1 — Create roles if they don't exist
-        string[] roles = {AppRoles.Admin , AppRoles.Student, AppRoles.Teacher };
+        string[] roles = { AppRoles.Admin, AppRoles.Student, AppRoles.Teacher };
 
         foreach (var role in roles)
         {

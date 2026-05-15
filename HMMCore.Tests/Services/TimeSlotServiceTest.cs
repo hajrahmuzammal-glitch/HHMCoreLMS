@@ -1,7 +1,6 @@
 using System.Linq.Expressions;
 using AutoMapper;
 using FluentAssertions;
-using HHMCore.Core.Common;
 using HHMCore.Core.DTOs.TimeSlot;
 using HHMCore.Core.Entities;
 using HHMCore.Core.Enums;

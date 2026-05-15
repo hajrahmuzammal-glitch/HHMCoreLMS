@@ -203,7 +203,7 @@ public sealed class SemesterServiceTests
     public async Task GetActiveAsync_ActiveExists_ReturnsSuccess()
     {
         _semesterRepo.Setup(r => r.FindAsync(It.IsAny<Expression<Func<Semester, bool>>>()))
-                     .ReturnsAsync(new List<Semester> { Make(isActive: true)});
+                     .ReturnsAsync(new List<Semester> { Make(isActive: true) });
 
         var result = await _sut.GetActiveAsync();
 

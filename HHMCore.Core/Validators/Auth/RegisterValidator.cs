@@ -1,8 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using FluentValidation;
 using HHMCore.Core.Common;
 using HHMCore.Core.DTOs.Auth;
@@ -35,7 +30,7 @@ public class RegisterValidator : AbstractValidator<RegisterDto>
 
         RuleFor(x => x.Role)
             .NotEmpty().WithMessage("Role is required.")
-            .Must(role => new[] { AppRoles.Admin, AppRoles.Teacher, AppRoles.Student}.Contains(role))
+            .Must(role => new[] { AppRoles.Admin, AppRoles.Teacher, AppRoles.Student }.Contains(role))
             .WithMessage("Role must be Admin, Teacher, or Student.");
     }
 }

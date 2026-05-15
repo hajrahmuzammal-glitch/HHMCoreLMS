@@ -1,12 +1,12 @@
+using System.Linq.Expressions;
 using AutoMapper;
 using FluentAssertions;
-using Moq;
 using HHMCore.Core.DTOs.Room;
 using HHMCore.Core.Entities;
 using HHMCore.Core.Interfaces;
 using HHMCore.Core.Services;
 using HHMCore.Tests.Helpers;
-using System.Linq.Expressions;
+using Moq;
 
 namespace HHMCore.Tests.Services;
 
@@ -43,7 +43,7 @@ public class RoomServiceTests
         Name = "Main Block"
     };
 
-    private static Room SavedRoom(Guid roomId,Guid buildingId) => new()
+    private static Room SavedRoom(Guid roomId, Guid buildingId) => new()
     {
         Id = roomId,
         RoomNumber = "A101",
@@ -87,7 +87,7 @@ public class RoomServiceTests
             .Setup(r => r.GetByIdWithIncludesAsync(
                 It.IsAny<Guid>(),
                 It.IsAny<Expression<Func<Room, object>>[]>()))
-            .ReturnsAsync(SavedRoom(RoomAId , BuildingAId));
+            .ReturnsAsync(SavedRoom(RoomAId, BuildingAId));
 
         // Act
         var result = await _sut.CreateAsync(dto, "admin@test.com");
@@ -191,7 +191,7 @@ public class RoomServiceTests
     {
         _roomRepoMock
             .Setup(r => r.GetAllWithIncludesAsync(It.IsAny<Expression<Func<Room, object>>[]>()))
-            .ReturnsAsync(new List<Room> { SavedRoom(RoomAId ,BuildingAId) });
+            .ReturnsAsync(new List<Room> { SavedRoom(RoomAId, BuildingAId) });
 
         var result = await _sut.GetAllAsync();
 
@@ -223,7 +223,7 @@ public class RoomServiceTests
             .Setup(r => r.GetByIdWithIncludesAsync(
                 roomId,
                 It.IsAny<Expression<Func<Room, object>>[]>()))
-            .ReturnsAsync(SavedRoom(roomId,BuildingAId));
+            .ReturnsAsync(SavedRoom(roomId, BuildingAId));
 
         var result = await _sut.GetByIdAsync(roomId);
 
@@ -276,7 +276,7 @@ public class RoomServiceTests
             .Setup(r => r.GetByIdWithIncludesAsync(
                 roomId,
                 It.IsAny<Expression<Func<Room, object>>[]>()))
-            .ReturnsAsync(SavedRoom(RoomAId ,BuildingAId));
+            .ReturnsAsync(SavedRoom(RoomAId, BuildingAId));
 
         _buildingRepoMock
             .Setup(r => r.GetByIdAsync(unknownBldId))
@@ -300,7 +300,7 @@ public class RoomServiceTests
             .Setup(r => r.GetByIdWithIncludesAsync(
                 roomId,
                 It.IsAny<Expression<Func<Room, object>>[]>()))
-            .ReturnsAsync(SavedRoom(RoomAId ,BuildingAId));
+            .ReturnsAsync(SavedRoom(RoomAId, BuildingAId));
 
         _roomRepoMock
             .Setup(r => r.ExistsAsync(It.IsAny<Expression<Func<Room, bool>>>()))
@@ -330,7 +330,7 @@ public class RoomServiceTests
              .Setup(r => r.GetByIdWithIncludesAsync(
                  roomId,
                  It.IsAny<Expression<Func<Room, object>>[]>()))
-             .ReturnsAsync(SavedRoom(RoomAId ,BuildingAId));
+             .ReturnsAsync(SavedRoom(RoomAId, BuildingAId));
 
         var result = await _sut.UpdateAsync(
             roomId,
@@ -364,7 +364,7 @@ public class RoomServiceTests
 
         _roomRepoMock
             .Setup(r => r.GetByIdAsync(roomId))
-            .ReturnsAsync(SavedRoom(RoomAId ,BuildingAId));
+            .ReturnsAsync(SavedRoom(RoomAId, BuildingAId));
 
         //_uowMock.Setup(u => u.CourseAssignments)
         //    .Returns(new Mock<IGenericRepository<CourseAssignment>>().Object);
@@ -385,7 +385,7 @@ public class RoomServiceTests
     public async Task DeleteAsync_ValidRoom_SoftDeletesAndSavesOnce()
     {
         var roomId = Guid.Parse("cccccccc-cccc-cccc-cccc-cccccccccccc");
-        var room = SavedRoom(RoomAId ,BuildingAId);
+        var room = SavedRoom(RoomAId, BuildingAId);
 
         _roomRepoMock
             .Setup(r => r.GetByIdAsync(roomId))

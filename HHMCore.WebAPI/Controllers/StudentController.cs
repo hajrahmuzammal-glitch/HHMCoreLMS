@@ -1,10 +1,9 @@
+using System.Security.Claims;
 using HHMCore.Core.Common;
 using HHMCore.Core.DTOs.Student;
 using HHMCore.Core.Interfaces;
-using HHMCore.Core.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using System.Security.Claims;
 
 namespace HHMCore.WebAPI.Controllers;
 
@@ -57,7 +56,7 @@ public class StudentController : ControllerBase
         //if (id != dto.Id)
         //    return BadRequest(ApiResponse.Fail("ID in URL does not match ID in request body."));
 
-        var result = await _studentService.UpdateAsync(id,dto, GetCurrentUserEmail());
+        var result = await _studentService.UpdateAsync(id, dto, GetCurrentUserEmail());
         return result.Success ? Ok(result) : BadRequest(result);
     }
 

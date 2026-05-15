@@ -1,6 +1,5 @@
 ﻿using HHMCore.Core.Common;
 using HHMCore.Core.DTOs.Role;
-using HHMCore.Core.DTOs.Room;
 
 namespace HHMCore.Core.Interfaces;
 

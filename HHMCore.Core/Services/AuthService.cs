@@ -1,13 +1,13 @@
-﻿using HHMCore.Core.Common;
+﻿using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
+using System.Text;
+using HHMCore.Core.Common;
 using HHMCore.Core.DTOs.Auth;
 using HHMCore.Core.Entities;
 using HHMCore.Core.Interfaces;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
-using System.IdentityModel.Tokens.Jwt;
-using System.Security.Claims;
-using System.Text;
 
 namespace HHMCore.Core.Services;
 

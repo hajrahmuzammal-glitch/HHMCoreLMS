@@ -16,6 +16,6 @@ public interface ICourseAssignmentService
         Guid teacherId);
     Task<ApiResponse<IReadOnlyList<CourseAssignmentResponseDto>>> GetMyAssignmentsAsync(string userId);
     Task<ApiResponse<CourseAssignmentResponseDto>> UpdateAsync(
-        Guid id,UpdateCourseAssignmentDto dto, string updatedBy);
+        Guid id, UpdateCourseAssignmentDto dto, string updatedBy);
     Task<ApiResponse> DeleteAsync(Guid id, string deletedBy);
 }

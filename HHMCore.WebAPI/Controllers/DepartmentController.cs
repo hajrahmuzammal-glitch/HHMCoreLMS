@@ -1,10 +1,10 @@
 
+using System.Security.Claims;
 using HHMCore.Core.Common;
 using HHMCore.Core.DTOs.Department;
 using HHMCore.Core.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using System.Security.Claims;
 
 namespace HHMCore.WebAPI.Controllers;
 
@@ -50,7 +50,7 @@ public class DepartmentController : ControllerBase
     [Authorize(Roles = AppRoles.Admin)]
     public async Task<IActionResult> Update(Guid id, [FromBody] UpdateDepartmentDto dto)
     {
-       var result = await _departmentService.UpdateAsync(id,dto, GetCurrentUser());
+        var result = await _departmentService.UpdateAsync(id, dto, GetCurrentUser());
         return result.Success ? Ok(result) : BadRequest(result);
     }
 

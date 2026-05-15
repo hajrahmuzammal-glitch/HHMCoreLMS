@@ -1,15 +1,15 @@
+using System.Security.Claims;
 using HHMCore.Core.Common;
 using HHMCore.Core.DTOs.Role;
 using HHMCore.Core.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using System.Security.Claims;
 
 namespace HHMCore.WebAPI.Controllers;
 
 [ApiController]
 [Route("api/roles")]
-[Authorize(Roles = AppRoles.Admin)] 
+[Authorize(Roles = AppRoles.Admin)]
 public class RoleController : ControllerBase
 {
     private readonly IRoleService _roleService;
@@ -19,7 +19,7 @@ public class RoleController : ControllerBase
         _roleService = roleService;
     }
 
-    
+
     [HttpPost]
     public async Task<IActionResult> Create([FromBody] CreateRoleDto dto)
     {
@@ -28,7 +28,7 @@ public class RoleController : ControllerBase
         return result.Success ? StatusCode(201, result) : BadRequest(result);
     }
 
-    
+
     [HttpGet]
     public async Task<IActionResult> GetAll()
     {

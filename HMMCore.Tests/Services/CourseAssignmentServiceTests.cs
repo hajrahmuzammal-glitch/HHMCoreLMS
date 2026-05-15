@@ -1,13 +1,12 @@
+using System.Linq.Expressions;
 using AutoMapper;
 using FluentAssertions;
-using Moq;
 using HHMCore.Core.DTOs.CourseAssignment;
 using HHMCore.Core.Entities;
 using HHMCore.Core.Interfaces;
 using HHMCore.Core.Services;
 using HHMCore.Tests.Helpers;
-using System.Linq.Expressions;
-using Microsoft.EntityFrameworkCore;
+using Moq;
 
 namespace HHMCore.Tests.Services;
 

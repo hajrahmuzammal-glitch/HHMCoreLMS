@@ -1,4 +1,3 @@
-using FluentAssertions;
 using FluentValidation.TestHelper;
 using HHMCore.Core.DTOs.TimeSlot;
 using HHMCore.Core.Enums;

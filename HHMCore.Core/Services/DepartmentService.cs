@@ -1,4 +1,4 @@
-// Location: HHMCore.Core/Services/DepartmentService.cs
+
 using AutoMapper;
 using HHMCore.Core.Common;
 using HHMCore.Core.DTOs.Department;
@@ -34,7 +34,8 @@ public class DepartmentService : IDepartmentService
             Code = dto.Code.ToUpper(),
             Description = dto.Description,
             IsActive = true,
-            CreatedAt = DateTime.UtcNow,
+            //CreatedAt = DateTimeOffset.UtcNow, we dont need to intiliaze it here as we already haev done in the base entity
+            //will think about the cons too
             CreatedBy = createdBy
         };
 
@@ -118,7 +119,7 @@ public class DepartmentService : IDepartmentService
         department.IsActive = dto.IsActive ?? department.IsActive;
 
         // Step 3 — Stamp who updated it and when
-        department.UpdatedAt = DateTime.UtcNow;
+        department.UpdatedAt = DateTimeOffset.UtcNow;
         department.UpdatedBy = updatedBy;
 
         // Step 4 — Tell EF Core this record changed, then save
@@ -129,7 +130,7 @@ public class DepartmentService : IDepartmentService
         var responseDto = _mapper.Map<DepartmentResponseDto>(department);
         return ApiResponse<DepartmentResponseDto>.Ok(responseDto, "Department updated successfully.");
     }
-    public async Task<ApiResponse> DeleteAsync(Guid id,string deletedBy)
+    public async Task<ApiResponse> DeleteAsync(Guid id, string deletedBy)
     {
         var department = await _unitOfWork.Departments.GetByIdAsync(id);
 

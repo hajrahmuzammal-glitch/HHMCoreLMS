@@ -1,8 +1,8 @@
-﻿using HHMCore.Core.Entities;
+﻿using System.Linq.Expressions;
+using HHMCore.Core.Entities;
 using HHMCore.Core.Interfaces;
 using HHMCore.Data.Context;
 using Microsoft.EntityFrameworkCore;
-using System.Linq.Expressions;
 
 public class GenericRepository<T> : IGenericRepository<T> where T : BaseEntity
 {

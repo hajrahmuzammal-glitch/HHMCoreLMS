@@ -1,9 +1,9 @@
+using System.Security.Claims;
 using HHMCore.Core.Common;
 using HHMCore.Core.DTOs.Building;
 using HHMCore.Core.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using System.Security.Claims;
 
 namespace HHMCore.WebAPI.Controllers;
 
@@ -19,7 +19,7 @@ public class BuildingController : ControllerBase
         _buildingService = buildingService;
     }
 
-    
+
     [HttpPost]
     [Authorize(Roles = AppRoles.Admin)]
     public async Task<IActionResult> Create([FromBody] CreateBuildingDto dto)
@@ -29,7 +29,7 @@ public class BuildingController : ControllerBase
         return result.Success ? StatusCode(201, result) : BadRequest(result);
     }
 
-    
+
     [HttpGet]
     [Authorize(Roles = "Admin,Teacher")]
     public async Task<IActionResult> GetAll()
@@ -38,7 +38,7 @@ public class BuildingController : ControllerBase
         return Ok(result);
     }
 
-    
+
     [HttpGet("{id:guid}")]
     [Authorize(Roles = "Admin,Teacher")]
     public async Task<IActionResult> GetById(Guid id)
@@ -47,7 +47,7 @@ public class BuildingController : ControllerBase
         return result.Success ? Ok(result) : NotFound(result);
     }
 
-    
+
     [HttpPut("{id:guid}")]
     [Authorize(Roles = AppRoles.Admin)]
     public async Task<IActionResult> Update(Guid id, [FromBody] UpdateBuildingDto dto)
@@ -57,7 +57,7 @@ public class BuildingController : ControllerBase
         return result.Success ? Ok(result) : BadRequest(result);
     }
 
-   
+
     [HttpDelete("{id:guid}")]
     [Authorize(Roles = AppRoles.Admin)]
     public async Task<IActionResult> Delete(Guid id)

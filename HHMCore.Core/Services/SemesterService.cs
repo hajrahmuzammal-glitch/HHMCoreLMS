@@ -24,7 +24,7 @@ public class SemesterService : ISemesterService
         var nameExists = await _unitOfWork.Semesters.ExistsAsync(
             s => s.Name.ToLower() == dto.Name.ToLower());
 
-        if(dto.EndDate <= dto.StartDate)
+        if (dto.EndDate <= dto.StartDate)
         {
             return ApiResponse<SemesterResponseDto>.Fail(
                "End date must be after start date.");
@@ -116,7 +116,7 @@ public class SemesterService : ISemesterService
             return ApiResponse<SemesterResponseDto>.Fail(
                 "End date must be after start date.");
         }
-        if(dto.SemesterNumber.HasValue)
+        if (dto.SemesterNumber.HasValue)
         {
             semester.SemesterNumber = dto.SemesterNumber.Value;
         }
