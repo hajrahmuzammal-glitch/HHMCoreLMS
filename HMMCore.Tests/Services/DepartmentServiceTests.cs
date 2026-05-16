@@ -14,7 +14,6 @@ public sealed class DepartmentServiceTests
 {
     private readonly Mock<IUnitOfWork> _uow;
     private readonly Mock<IGenericRepository<Department>> _repo;
-    private readonly IMapper _mapper;
     private readonly DepartmentService _sut;
     private readonly Mock<IGenericRepository<Teacher>> _teacherRepo;
     private readonly Mock<IGenericRepository<Student>> _studentRepo;
@@ -26,14 +25,11 @@ public sealed class DepartmentServiceTests
         _teacherRepo = new Mock<IGenericRepository<Teacher>>();
         _studentRepo = new Mock<IGenericRepository<Student>>();
 
-        _mapper = new MapperConfiguration(cfg =>
-            cfg.AddProfile<DepartmentMappingProfile>()).CreateMapper();
-
         _uow.Setup(u => u.Departments).Returns(_repo.Object);
 
         _uow.Setup(u => u.Teachers).Returns(_teacherRepo.Object);
         _uow.Setup(u => u.Students).Returns(_studentRepo.Object);
-        _sut = new DepartmentService(_uow.Object, _mapper);
+        _sut = new DepartmentService(_uow.Object);
     }
 
     // ── helpers ────────────────────────────────────────────────────────────────
@@ -49,7 +45,7 @@ public sealed class DepartmentServiceTests
             Code = code,
             Description = "CS department",
             IsActive = true,
-            CreatedAt = DateTime.UtcNow,
+            CreatedAt = DateTimeOffset.UtcNow,
             CreatedBy = "admin@test.com"
         };
 

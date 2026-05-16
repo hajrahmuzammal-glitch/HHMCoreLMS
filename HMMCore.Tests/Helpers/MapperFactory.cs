@@ -10,7 +10,6 @@ public static class MapperFactory
         var config = new MapperConfiguration(cfg =>
         {
             cfg.AddProfile<AuthMappingProfile>();
-            cfg.AddProfile<DepartmentMappingProfile>();
             cfg.AddProfile<CourseMappingProfile>();
             cfg.AddProfile<StudentMappingProfile>();
             cfg.AddProfile<TeacherMappingProfile>();

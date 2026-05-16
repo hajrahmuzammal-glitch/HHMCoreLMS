@@ -20,10 +20,6 @@ public class DepartmentController : ControllerBase
         _departmentService = departmentService;
     }
 
-    // Reads the logged-in user's email from their JWT token
-    private string GetCurrentUser() =>
-        User.FindFirstValue(ClaimTypes.Email) ?? "system";
-
     [HttpPost]
     [Authorize(Roles = AppRoles.Admin)]
     public async Task<IActionResult> Create([FromBody] CreateDepartmentDto dto)
@@ -58,8 +54,13 @@ public class DepartmentController : ControllerBase
     [Authorize(Roles = AppRoles.Admin)]
     public async Task<IActionResult> Delete(Guid id)
     {
-        var deletedBy = User.FindFirstValue(ClaimTypes.Email) ?? "system";
+        var deletedBy = GetCurrentUser();
         var result = await _departmentService.DeleteAsync(id, deletedBy);
         return result.Success ? Ok(result) : NotFound(result);
     }
+
+    //Private Helper Method to get current user email from claims
+    // Reads the logged-in user's email from their JWT token
+    private string GetCurrentUser() =>
+        User.FindFirstValue(ClaimTypes.Email) ?? "system";
 }

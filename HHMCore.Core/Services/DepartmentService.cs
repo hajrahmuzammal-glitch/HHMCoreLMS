@@ -1,53 +1,63 @@
 
-using AutoMapper;
 using HHMCore.Core.Common;
 using HHMCore.Core.DTOs.Department;
 using HHMCore.Core.Entities;
 using HHMCore.Core.Interfaces;
+using HHMCore.Core.Mappings;
 
 namespace HHMCore.Core.Services;
 
 public class DepartmentService : IDepartmentService
 {
     private readonly IUnitOfWork _unitOfWork;
-    private readonly IMapper _mapper;
 
-    public DepartmentService(IUnitOfWork unitOfWork, IMapper mapper)
+    public DepartmentService(IUnitOfWork unitOfWork)
     {
         _unitOfWork = unitOfWork;
-        _mapper = mapper;
     }
+
+    //Create //
 
     public async Task<ApiResponse<DepartmentResponseDto>> CreateAsync(CreateDepartmentDto dto, string createdBy)
     {
+        //Check for duplicate Name and Code //
+
+        //Duplicate Name Check
+        var nameExists = await _unitOfWork.Departments
+           .ExistsAsync(x => x.Name.ToLower() == dto.Name.ToLower());
+        if (nameExists)
+        {
+            return ApiResponse<DepartmentResponseDto>.Fail("A department with this Name already exists.");
+        }
+
+        //Duplicate Code Check
         var codeExists = await _unitOfWork.Departments
-           .ExistsAsync(x => x.Code == dto.Code.ToUpper());
+            .ExistsAsync(x => x.Code == dto.Code.ToUpper());
 
         if (codeExists)
         {
-            return ApiResponse<DepartmentResponseDto>.Fail("A department with this code already exists.");
+            return ApiResponse<DepartmentResponseDto>.Fail("A department with this Code already exists.");
         }
 
-        var department = new Department
-        {
-            Name = dto.Name,
-            Code = dto.Code.ToUpper(),
-            Description = dto.Description,
-            IsActive = true,
-            //CreatedAt = DateTimeOffset.UtcNow, we dont need to intiliaze it here as we already haev done in the base entity
-            //will think about the cons too
-            CreatedBy = createdBy
-        };
+        //Instantiation of Department entity Object
 
+        var department = dto.ToEntity(createdBy);
+
+        //Adding to database
         await _unitOfWork.Departments.AddAsync(department);
+
+        //saving 
         await _unitOfWork.SaveChangesAsync();
 
-        var response = _mapper.Map<DepartmentResponseDto>(department);
+        //building response
+        var response =department.ToResponseDto();
         return ApiResponse<DepartmentResponseDto>.Ok(response, "Department created successfully.");
     }
 
+    //Get department By Id
     public async Task<ApiResponse<DepartmentResponseDto>> GetByIdAsync(Guid id)
     {
+        //Fetching the department 
         var department = await _unitOfWork.Departments.GetByIdAsync(id);
 
         if (department == null)
@@ -55,37 +65,39 @@ public class DepartmentService : IDepartmentService
             return ApiResponse<DepartmentResponseDto>.Fail("Department not found.");
         }
 
-        var response = _mapper.Map<DepartmentResponseDto>(department);
+        //Building Response
+        var response = department.ToResponseDto();
         return ApiResponse<DepartmentResponseDto>.Ok(response);
     }
 
+    //Get All Departments
     public async Task<ApiResponse<IReadOnlyList<DepartmentResponseDto>>> GetAllAsync()
     {
+        //fetching all departments
         var departments = await _unitOfWork.Departments.GetAllAsync();
-        var response = _mapper.Map<IReadOnlyList<DepartmentResponseDto>>(departments);
+
+        //Building Response
+        var response = departments.Select(t => t.ToResponseDto()).ToList();
         return ApiResponse<IReadOnlyList<DepartmentResponseDto>>.Ok(response);
     }
 
-
+    //Update 
     public async Task<ApiResponse<DepartmentResponseDto>> UpdateAsync(
         Guid id,
         UpdateDepartmentDto dto,
         string updatedBy)
     {
-        // Step 1 — Find the existing record. If it's not there, fail immediately.
+        //Checking if the department exists
         var department = await _unitOfWork.Departments.GetByIdAsync(id);
         if (department == null)
         {
             return ApiResponse<DepartmentResponseDto>.Fail("Department not found.");
         }
 
-        // Step 2 — Apply only the fields that were actually sent.
-        // IsNullOrWhiteSpace catches null, "", and "   " — all three mean "don't change it."
-        // ?? is used for value types (bool, int, Guid) which cannot be an empty string.
-
+        //Updating feilds provided 
         if (!string.IsNullOrWhiteSpace(dto.Name))
         {
-            // Check for duplicate name (excluding this record itself)
+            // Check for duplicate name 
             var nameExists = await _unitOfWork.Departments.ExistsAsync(
                 d => d.Name.ToLower() == dto.Name.ToLower() && d.Id != id);
             if (nameExists)
@@ -93,12 +105,11 @@ public class DepartmentService : IDepartmentService
                 return ApiResponse<DepartmentResponseDto>.Fail(
                     "A department with this name already exists.");
             }
-
-            department.Name = dto.Name.Trim();
         }
 
         if (!string.IsNullOrWhiteSpace(dto.Code))
         {
+            // Check for duplicate Code
             var codeExists = await _unitOfWork.Departments.ExistsAsync(
                 d => d.Code.ToUpper() == dto.Code.ToUpper() && d.Id != id);
             if (codeExists)
@@ -106,38 +117,38 @@ public class DepartmentService : IDepartmentService
                 return ApiResponse<DepartmentResponseDto>.Fail(
                     "A department with this code already exists.");
             }
-
-            department.Code = dto.Code.ToUpper().Trim();
         }
 
-        if (!string.IsNullOrWhiteSpace(dto.Description))
-        {
-            department.Description = dto.Description.Trim();
-        }
+        //Updating the department entity w
+        department.ApplyUpdate(dto);
 
-        // bool? — use ?? because bool cannot be empty string
-        department.IsActive = dto.IsActive ?? department.IsActive;
-
-        // Step 3 — Stamp who updated it and when
+        //Updating audit fields
         department.UpdatedAt = DateTimeOffset.UtcNow;
         department.UpdatedBy = updatedBy;
 
-        // Step 4 — Tell EF Core this record changed, then save
+        //saving changes
         _unitOfWork.Departments.Update(department);
         await _unitOfWork.SaveChangesAsync();
 
-        // Step 5 — Map to response DTO and return
-        var responseDto = _mapper.Map<DepartmentResponseDto>(department);
+        //Building Response
+        var responseDto = department.ToResponseDto();
         return ApiResponse<DepartmentResponseDto>.Ok(responseDto, "Department updated successfully.");
     }
+
+    //Delete
+
     public async Task<ApiResponse> DeleteAsync(Guid id, string deletedBy)
     {
+        //Checking if the department exists
         var department = await _unitOfWork.Departments.GetByIdAsync(id);
 
         if (department == null)
         {
             return ApiResponse.Fail("Department not found.");
         }
+
+        //Check for associated teachers and students before deletion//
+        //Teacher Dependency Check
         var hasTeachers = await _unitOfWork.Teachers
 
         .ExistsAsync(t => t.DepartmentId == id);
@@ -146,6 +157,8 @@ public class DepartmentService : IDepartmentService
             return ApiResponse.Fail("Cannot delete this department. Teachers are assigned to it.");
 
         }
+
+        //Student Dependency Check
         var hasStudents = await _unitOfWork.Students
             .ExistsAsync(s => s.DepartmentId == id);
         if (hasStudents)
@@ -153,12 +166,17 @@ public class DepartmentService : IDepartmentService
             return ApiResponse.Fail("Cannot delete this department. Students are enrolled in it.");
         }
 
+        //Soft Deletion - Marking as Inactive
         _unitOfWork.Departments.Delete(department);
-        department.UpdatedAt = DateTime.UtcNow;
+
+        //Updating audit fields
+        department.UpdatedAt = DateTimeOffset.UtcNow;
         department.UpdatedBy = deletedBy;
 
+        //saveing changes
         await _unitOfWork.SaveChangesAsync();
 
+        //building response
         return ApiResponse.Ok("Department deleted successfully.");
     }
 }
