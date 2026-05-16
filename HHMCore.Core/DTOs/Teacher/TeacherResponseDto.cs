@@ -1,28 +1,32 @@
-﻿using HHMCore.Core.Enums;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace HHMCore.Core.DTOs.Teacher;
 
 public class TeacherResponseDto
 {
-    public Guid Id { get; set; }
-    public string UserId { get; set; } = string.Empty;
-    public string FullName { get; set; } = string.Empty;
-    public string Email { get; set; } = string.Empty;
-    public string EmployeeId { get; set; } = string.Empty;
-    public string Cnic { get; set; } = string.Empty;
-    public string DesignationTitle { get; set; } = string.Empty;
-    public Guid DesignationId { get; set; }
-    public string Gender { get; set; } = string.Empty;
-    public decimal Salary { get; set; }
-    public string? PhoneNumber { get; set; }
-    public string? Address { get; set; }
-    public DateTime DateOfBirth { get; set; }
-    public Guid DepartmentId { get; set; }
-    public string DepartmentName { get; set; } = string.Empty;
-    public DateTime CreatedAt { get; set; }
+    public Guid Id { get; init; }
+    public string FullName { get; init; } = string.Empty;
+    public string Email { get; init; } = string.Empty;
+    public string EmployeeId { get; init; } = string.Empty;
+    public string Cnic { get; init; } = string.Empty;
+    public DateOnly DateOfBirth { get; init; }
+    public string? PhoneNumber { get; init; }
+    public string? Address { get; init; }
+    public string DesignationTitle { get; init; } = string.Empty;
+    public Guid DesignationId { get; init; }
+    public string Gender { get; init; } = string.Empty;
+    public string Qualification { get; init; } = string.Empty;
+    public DateOnly JoiningDate { get; init; }
+    public decimal Salary { get; init; }
+    public string Status { get; init; } = string.Empty;
+
+    public Guid DepartmentId { get; init; }
+    public string DepartmentName { get; init; } = string.Empty;
+
+    public DateTimeOffset CreatedAt { get; init; }
+    public string CreatedBy { get; init; } = string.Empty;
+    public DateTimeOffset? UpdatedAt { get; set; }
+    public string? UpdatedBy { get; set; }
+    //then we need to see who has deeted these filed too? althoug i am using soft delete
+    //and i have the deletedBy in the parameter of the delete function but it should be shown to admin somewhere?
+
 }

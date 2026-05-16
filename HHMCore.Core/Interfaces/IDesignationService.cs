@@ -8,6 +8,6 @@ public interface IDesignationService
     Task<ApiResponse<DesignationResponseDto>> CreateAsync(CreateDesignationDto dto, string createdBy);
     Task<ApiResponse<IReadOnlyList<DesignationResponseDto>>> GetAllAsync();
     Task<ApiResponse<DesignationResponseDto>> GetByIdAsync(Guid id);
-    Task<ApiResponse<DesignationResponseDto>> UpdateAsync(Guid id,UpdateDesignationDto dto, string updatedBy);
+    Task<ApiResponse<DesignationResponseDto>> UpdateAsync(Guid id, UpdateDesignationDto dto, string updatedBy);
     Task<ApiResponse> DeleteAsync(Guid id);
 }

@@ -1,6 +1,6 @@
-﻿namespace HHMCore.Core.Services;
+namespace HHMCore.Core.Services;
 
-using AutoMapper;
+
 using HHMCore.Core.Common;
 using HHMCore.Core.DTOs.Teacher;
 using HHMCore.Core.Entities;
@@ -11,18 +11,15 @@ using Microsoft.AspNetCore.Identity;
 public class TeacherService : ITeacherService
 {
     private readonly IUnitOfWork _unitOfWork;
-    private readonly IMapper _mapper;
     private readonly UserManager<AppUser> _userManager;
     private readonly IEmailService _emailService;
 
     public TeacherService(
         IUnitOfWork unitOfWork,
-        IMapper mapper,
         UserManager<AppUser> userManager,
         IEmailService emailService)
     {
         _unitOfWork = unitOfWork;
-        _mapper = mapper;
         _userManager = userManager;
         _emailService = emailService;
     }
@@ -56,20 +53,8 @@ public class TeacherService : ITeacherService
             return ApiResponse<TeacherResponseDto>.Fail("Designation not found.");
         }
 
-        var allTeachers = await _unitOfWork.Teachers.GetAllAsync();
-        var currentYear = DateTime.UtcNow.Year.ToString();
 
-        var lastNumber = allTeachers
-            .Where(t => t.EmployeeId.StartsWith($"EMP-{currentYear}-"))
-            .Select(t =>
-            {
-                var parts = t.EmployeeId.Split('-');
-                return parts.Length == 3 && int.TryParse(parts[2], out var n) ? n : 0;
-            })
-            .DefaultIfEmpty(0)
-            .Max();
-
-        var employeeId = $"EMP-{currentYear}-{(lastNumber + 1):D4}";
+        var employeeId = await GenerateEmployeeIdAsync();
 
         var appUser = new AppUser
         {
@@ -85,7 +70,7 @@ public class TeacherService : ITeacherService
             return ApiResponse<TeacherResponseDto>.Fail("Failed to create account.", errors);
         }
 
-        var roleResult = await _userManager.AddToRoleAsync(appUser, "Teacher");
+        var roleResult = await _userManager.AddToRoleAsync(appUser, AppRoles.Teacher);
         if (!roleResult.Succeeded)
         {
             await _userManager.DeleteAsync(appUser);
@@ -95,21 +80,7 @@ public class TeacherService : ITeacherService
 
         try
         {
-            var teacher = new Teacher
-            {
-                UserId = appUser.Id,
-                EmployeeId = employeeId,
-                Cnic = dto.Cnic.Trim(),
-                DesignationId = dto.DesignationId,
-                Gender = dto.Gender,
-                Salary = dto.Salary,
-                DepartmentId = dto.DepartmentId,
-                PhoneNumber = dto.PhoneNumber.Trim(),
-                Address = dto.Address?.Trim(),
-                DateOfBirth = dto.DateOfBirth,
-                CreatedBy = createdBy,
-                CreatedAt = DateTime.UtcNow
-            };
+            var teacher = dto.ToEntity(appUser.Id, employeeId, createdBy);
 
             await _unitOfWork.Teachers.AddAsync(teacher);
             await _unitOfWork.SaveChangesAsync();
@@ -120,7 +91,7 @@ public class TeacherService : ITeacherService
                 appUser.FullName,
                 appUser.Email!,
                 dto.Password,
-                "Teacher");
+                AppRoles.Teacher);
 
             var created = await _unitOfWork.Teachers
                 .GetByIdWithIncludesAsync(teacher.Id, t => t.User, t => t.Department, t => t.Designation);
@@ -130,7 +101,7 @@ public class TeacherService : ITeacherService
                 return ApiResponse<TeacherResponseDto>.Fail("Teacher created but could not be retrieved.");
             }
 
-            var response = _mapper.Map<TeacherResponseDto>(created);
+            var response = created.ToResponseDto();
             return ApiResponse<TeacherResponseDto>.Ok(response, "Teacher created successfully.");
         }
         catch
@@ -145,7 +116,7 @@ public class TeacherService : ITeacherService
         var teachers = await _unitOfWork.Teachers
             .GetAllWithIncludesAsync(t => t.User, t => t.Department, t => t.Designation);
 
-        var response = _mapper.Map<IReadOnlyList<TeacherResponseDto>>(teachers);
+        var response = teachers.Select(t => t.ToResponseDto()).ToList();
         return ApiResponse<IReadOnlyList<TeacherResponseDto>>.Ok(response, "Teachers retrieved successfully.");
     }
 
@@ -159,7 +130,7 @@ public class TeacherService : ITeacherService
             return ApiResponse<TeacherResponseDto>.Fail("Teacher not found.");
         }
 
-        var response = _mapper.Map<TeacherResponseDto>(teacher);
+        var response = teacher.ToResponseDto();
         return ApiResponse<TeacherResponseDto>.Ok(response, "Teacher retrieved successfully.");
     }
 
@@ -175,7 +146,7 @@ public class TeacherService : ITeacherService
             return ApiResponse<TeacherResponseDto>.Fail("Teacher profile not found.");
         }
 
-        var response = _mapper.Map<TeacherResponseDto>(teacher);
+        var response = teacher.ToResponseDto();
         return ApiResponse<TeacherResponseDto>.Ok(response, "Profile retrieved successfully.");
     }
 
@@ -192,7 +163,7 @@ public class TeacherService : ITeacherService
                 t => t.DepartmentId == departmentId,
                 t => t.User, t => t.Department, t => t.Designation);
 
-        var response = _mapper.Map<IReadOnlyList<TeacherResponseDto>>(teachers);
+        var response = teachers.Select(t => t.ToResponseDto()).ToList();
         return ApiResponse<IReadOnlyList<TeacherResponseDto>>.Ok(response, "Teachers retrieved successfully.");
     }
 
@@ -213,21 +184,21 @@ public class TeacherService : ITeacherService
         teacher.Address = string.IsNullOrWhiteSpace(dto.Address) ? teacher.Address : dto.Address.Trim();
         teacher.Qualification = string.IsNullOrWhiteSpace(dto.Qualification) ? teacher.Qualification : dto.Qualification.Trim();
 
-        teacher.UpdatedAt = DateTime.UtcNow;
+        teacher.UpdatedAt = DateTimeOffset.UtcNow;
         teacher.UpdatedBy = userId;
 
         _unitOfWork.Teachers.Update(teacher);
         await _unitOfWork.SaveChangesAsync();
 
-        var response = _mapper.Map<TeacherResponseDto>(teacher);
+        var response = teacher.ToResponseDto();
         return ApiResponse<TeacherResponseDto>.Ok(response, "Profile updated successfully.");
     }
 
     public async Task<ApiResponse<TeacherResponseDto>> UpdateAsync(
-        UpdateTeacherDto dto, string updatedBy)
+       Guid id, UpdateTeacherDto dto, string updatedBy)
     {
         var teacher = await _unitOfWork.Teachers
-            .GetByIdWithIncludesAsync(dto.Id, t => t.User, t => t.Department, t => t.Designation);
+            .GetByIdWithIncludesAsync(id, t => t.User, t => t.Department, t => t.Designation);
 
         if (teacher is null)
         {
@@ -243,6 +214,15 @@ public class TeacherService : ITeacherService
             }
         }
 
+        if (dto.DepartmentId.HasValue)
+        {
+            var department = await _unitOfWork.Departments.GetByIdAsync(dto.DepartmentId.Value);
+            if (department is null)
+            {
+                return ApiResponse<TeacherResponseDto>.Fail("Department not found");
+            }
+        }
+
         if (!string.IsNullOrWhiteSpace(dto.FullName))
         {
             var appUser = await _userManager.FindByIdAsync(teacher.UserId);
@@ -253,16 +233,9 @@ public class TeacherService : ITeacherService
             }
         }
 
-        teacher.DesignationId = dto.DesignationId ?? teacher.DesignationId;
-        teacher.Gender = dto.Gender ?? teacher.Gender;
-        teacher.Salary = dto.Salary ?? teacher.Salary;
-        teacher.DepartmentId = dto.DepartmentId ?? teacher.DepartmentId;
-        teacher.DateOfBirth = dto.DateOfBirth ?? teacher.DateOfBirth;
-        teacher.PhoneNumber = string.IsNullOrWhiteSpace(dto.PhoneNumber) ? teacher.PhoneNumber : dto.PhoneNumber.Trim();
-        teacher.Address = string.IsNullOrWhiteSpace(dto.Address) ? teacher.Address : dto.Address.Trim();
-
+        teacher.ApplyUpdate(dto);
         teacher.UpdatedBy = updatedBy;
-        teacher.UpdatedAt = DateTime.UtcNow;
+        teacher.UpdatedAt = DateTimeOffset.UtcNow;
 
         _unitOfWork.Teachers.Update(teacher);
         await _unitOfWork.SaveChangesAsync();
@@ -275,7 +248,7 @@ public class TeacherService : ITeacherService
             return ApiResponse<TeacherResponseDto>.Fail("Teacher updated but could not be retrieved.");
         }
 
-        var response = _mapper.Map<TeacherResponseDto>(updated);
+        var response = updated.ToResponseDto();
         return ApiResponse<TeacherResponseDto>.Ok(response, "Teacher updated successfully.");
     }
 
@@ -287,12 +260,34 @@ public class TeacherService : ITeacherService
             return ApiResponse.Fail("Teacher not found.");
         }
 
-        teacher.UpdatedAt = DateTime.UtcNow;
+        teacher.UpdatedAt = DateTimeOffset.UtcNow;
         teacher.UpdatedBy = deletedBy;
 
         _unitOfWork.Teachers.Delete(teacher);
         await _unitOfWork.SaveChangesAsync();
 
         return ApiResponse.Ok("Teacher deleted successfully.");
+    }
+
+    // Private Helpers //
+
+    //Employee Id Generator
+
+    private async Task<string> GenerateEmployeeIdAsync()
+    {
+        var allTeachers = await _unitOfWork.Teachers.GetAllAsync();
+        var currentYear = DateTimeOffset.UtcNow.Year.ToString();
+
+        var lastNumber = allTeachers
+            .Where(t => t.EmployeeId.StartsWith($"EMP-{currentYear}-"))
+            .Select(t =>
+            {
+                var parts = t.EmployeeId.Split('-');
+                return parts.Length == 3 && int.TryParse(parts[2], out var n) ? n : 0;
+            })
+            .DefaultIfEmpty(0)
+            .Max();
+
+        return $"EMP-{currentYear}-{(lastNumber + 1):D4}";
     }
 }

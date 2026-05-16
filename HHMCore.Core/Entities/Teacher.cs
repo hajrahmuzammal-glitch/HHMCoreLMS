@@ -1,10 +1,5 @@
-﻿using HHMCore.Core.Enums;
-using Microsoft.AspNetCore.Identity;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using HHMCore.Core.Common;
+using HHMCore.Core.Enums;
 
 namespace HHMCore.Core.Entities;
 
@@ -15,16 +10,16 @@ public class Teacher : BaseEntity
     public string FullName { get; set; } = string.Empty;
     public string EmployeeId { get; set; } = string.Empty;
     public string Cnic { get; set; } = string.Empty;
-    public DateTime DateOfBirth { get; set; }
+    public DateOnly DateOfBirth { get; set; }
     public string PhoneNumber { get; set; } = string.Empty;
     public string? Address { get; set; }
     public Guid DesignationId { get; set; }
     public Designation Designation { get; set; } = null!;
     public Gender Gender { get; set; }
     public string Qualification { get; set; } = string.Empty;
-    public DateTime JoiningDate { get; set; } = DateTime.UtcNow;
+    public DateOnly JoiningDate { get; set; }
     public decimal Salary { get; set; }
-    public string Status { get; set; } = "Active";
+    public string Status { get; set; } = TeacherStatus.Active;
     public string? ProfileImagePath { get; set; }
 
     public Guid DepartmentId { get; set; }

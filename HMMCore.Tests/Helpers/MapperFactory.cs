@@ -1,4 +1,4 @@
-﻿using AutoMapper;
+using AutoMapper;
 using HHMCore.Core.Mappings;
 
 namespace HHMCore.Tests.Helpers;
@@ -12,7 +12,6 @@ public static class MapperFactory
             cfg.AddProfile<AuthMappingProfile>();
             cfg.AddProfile<CourseMappingProfile>();
             cfg.AddProfile<StudentMappingProfile>();
-            cfg.AddProfile<TeacherMappingProfile>();
             cfg.AddProfile<DesignationMappingProfile>();
             cfg.AddProfile<SemesterMappingProfile>();
             cfg.AddProfile<RoomMappingProfile>();

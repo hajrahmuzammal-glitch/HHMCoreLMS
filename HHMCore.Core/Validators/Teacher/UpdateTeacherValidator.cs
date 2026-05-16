@@ -1,19 +1,12 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using FluentValidation;
 using HHMCore.Core.DTOs.Teacher;
 
 namespace HHMCore.Core.Validators.Teacher;
 
-public class UpdateTeacherValidator : AbstractValidator<UpdateTeacherDto>
+public sealed class UpdateTeacherValidator : AbstractValidator<UpdateTeacherDto>
 {
     public UpdateTeacherValidator()
     {
-        RuleFor(x => x.Id)
-            .Must(id => id != Guid.Empty).WithMessage("A valid Teacher ID is required.");
 
         RuleFor(x => x.FullName)
          .NotEmpty().WithMessage("Full name is required.")
@@ -45,8 +38,26 @@ public class UpdateTeacherValidator : AbstractValidator<UpdateTeacherDto>
             .When(x => x.Address != null);
 
         RuleFor(x => x.DateOfBirth)
-            .NotEmpty().WithMessage("Date of birth is required.")
-            .Must(dob => dob >= new DateTime(1940, 1, 1) && dob <= DateTime.UtcNow.AddYears(-22))
-            .WithMessage("Date of birth must be between 1940 and 22 years ago.");
+            .Must(dob => dob!.Value >= new DateOnly(1940, 1, 1) &&
+                         dob.Value <= DateOnly.FromDateTime(DateTime.UtcNow).AddYears(-18))
+            .WithMessage("Date of birth must be between 1940 and 18 years ago.")
+            .When(x => x.DateOfBirth.HasValue);
+
+
+        RuleFor(x => x.JoiningDate)
+            .Must(jd => jd!.Value >= DateOnly.FromDateTime(DateTime.UtcNow).AddYears(-30) &&
+                    jd.Value <= DateOnly.FromDateTime(DateTime.UtcNow).AddYears(1))
+            .WithMessage("Joining date must be within the last 30 years and no more than 1 year in the future.")
+            .When(x => x.JoiningDate.HasValue);
+
+
+        //added this rule too myself admin side
+        RuleFor(x => x.Qualification)
+           //.NotEmpty().WithMessage("Qualification is required.")
+           .MaximumLength(150).WithMessage("Qualification cannot exceed 150 characters.")
+           .When(x => x.Qualification != null);
+
+
+
     }
 }

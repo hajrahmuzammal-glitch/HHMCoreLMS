@@ -1,4 +1,4 @@
-﻿// HHMCore.Core/DTOs/CourseAssignment/CourseAssignmentResponseDto.cs
+// HHMCore.Core/DTOs/CourseAssignment/CourseAssignmentResponseDto.cs
 
 namespace HHMCore.Core.DTOs.CourseAssignment;
 
@@ -36,5 +36,5 @@ public class CourseAssignmentResponseDto
     public string Section { get; set; } = string.Empty;
     public int MaxEnrollment { get; set; }
 
-    public DateTime CreatedAt { get; set; }
+    public DateTimeOffset CreatedAt { get; set; }
 }

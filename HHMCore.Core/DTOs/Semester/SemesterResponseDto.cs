@@ -9,7 +9,7 @@ public class SemesterResponseDto
     public DateTime StartDate { get; set; }
     public DateTime EndDate { get; set; }
     public bool IsActive { get; set; }
-    public DateTime CreatedAt { get; set; }
-    public int SemesterNumber { get; set; }   
-    public DateTime? UpdatedAt { get; set; }
+    public DateTimeOffset CreatedAt { get; set; }
+    public int SemesterNumber { get; set; }
+    public DateTimeOffset? UpdatedAt { get; set; }
 }

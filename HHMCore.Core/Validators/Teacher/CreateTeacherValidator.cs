@@ -1,14 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using FluentValidation;
 using HHMCore.Core.DTOs.Teacher;
 
 namespace HHMCore.Core.Validators.Teacher;
 
-public class CreateTeacherValidator : AbstractValidator<CreateTeacherDto>
+public sealed class CreateTeacherValidator : AbstractValidator<CreateTeacherDto>
 {
     public CreateTeacherValidator()
     {
@@ -49,9 +44,23 @@ public class CreateTeacherValidator : AbstractValidator<CreateTeacherDto>
 
         RuleFor(x => x.Address)
             .MaximumLength(250).WithMessage("Address cannot exceed 250 characters.");
-
+        // DateOfBirth rule
         RuleFor(x => x.DateOfBirth)
-            .NotEmpty().WithMessage("Date of birth is required.")
-            .LessThan(DateTime.UtcNow).WithMessage("Date of birth must be in the past.");
+            .Must(dob => dob >= new DateOnly(1940, 1, 1) &&
+              dob <= DateOnly.FromDateTime(DateTime.UtcNow).AddYears(-18))
+            .WithMessage("Date of birth must be after 1940 and candidate should not be younger than 18.");
+
+
+        // JoiningDate rule  
+        RuleFor(x => x.JoiningDate)
+            .Must(jd => jd >= DateOnly.FromDateTime(DateTime.UtcNow).AddYears(-30) &&
+               jd <= DateOnly.FromDateTime(DateTime.UtcNow).AddYears(1))
+            .WithMessage("Joining date must be within the last 30 years and no more than 1 year in the future.")
+;
+
+        RuleFor(x => x.Qualification)
+            .NotEmpty().WithMessage("Qualification is required is required.")
+           .MaximumLength(150).WithMessage("Qualification cannot exceed 150 characters.");
+
     }
 }

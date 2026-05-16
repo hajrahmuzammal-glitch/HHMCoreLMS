@@ -105,7 +105,7 @@ public class StudentService : IStudentService
             var response = _mapper.Map<StudentResponseDto>(created);
             return ApiResponse<StudentResponseDto>.Ok(response, "Student created successfully.");
         }
-        catch (Exception ex)
+        catch (Exception)
         {
             await _userManager.DeleteAsync(appUser);
             return ApiResponse<StudentResponseDto>.Fail("Failed to create student profile. Please try again.");

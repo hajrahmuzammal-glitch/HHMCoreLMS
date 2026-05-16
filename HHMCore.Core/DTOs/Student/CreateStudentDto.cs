@@ -1,4 +1,4 @@
-namespace HHMCore.Core.DTOs.Student;
+﻿namespace HHMCore.Core.DTOs.Student;
 
 public class CreateStudentDto
 {

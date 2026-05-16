@@ -1,4 +1,4 @@
-﻿namespace HHMCore.Core.DTOs.Building;
+namespace HHMCore.Core.DTOs.Building;
 
 public class BuildingResponseDto
 {
@@ -7,6 +7,6 @@ public class BuildingResponseDto
     public string? Code { get; set; }
     public string? Description { get; set; }
     public bool IsActive { get; set; }
-    public int RoomCount { get; set; }   
-    public DateTime CreatedAt { get; set; }
+    public int RoomCount { get; set; }
+    public DateTimeOffset CreatedAt { get; set; }
 }

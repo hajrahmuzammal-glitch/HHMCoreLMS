@@ -1,9 +1,3 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
 namespace HHMCore.Core.DTOs.Student;
 
 public class StudentResponseDto
@@ -20,5 +14,5 @@ public class StudentResponseDto
     public string DepartmentName { get; set; } = string.Empty;
     public Guid DepartmentId { get; set; }
     public string Status { get; set; } = string.Empty;
-    public DateTime CreatedAt { get; set; }
+    public DateTimeOffset CreatedAt { get; set; }
 }

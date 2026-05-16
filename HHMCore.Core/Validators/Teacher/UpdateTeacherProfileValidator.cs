@@ -1,8 +1,3 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using FluentValidation;
 using HHMCore.Core.DTOs.Teacher;
 
@@ -13,12 +8,11 @@ public sealed class UpdateTeacherProfileValidator : AbstractValidator<UpdateTeac
     public UpdateTeacherProfileValidator()
     {
         RuleFor(x => x.PhoneNumber)
-            .NotEmpty().WithMessage("Phone number is required.")
+            //.NotEmpty().WithMessage("Phone number is required.") //asked to remove this
             .Matches(@"^03[0-9]{9}$").WithMessage("Phone number must be a valid Pakistani number (e.g. 03001234567).")
             .When(x => x.PhoneNumber != null);
 
         RuleFor(x => x.Qualification)
-            .NotEmpty().WithMessage("Qualification is required.")
             .MaximumLength(150).WithMessage("Qualification cannot exceed 150 characters.")
             .When(x => x.Qualification != null);
 

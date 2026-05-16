@@ -1,9 +1,9 @@
+using System.Security.Claims;
 using HHMCore.Core.Common;
 using HHMCore.Core.DTOs.Teacher;
 using HHMCore.Core.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using System.Security.Claims;
 
 namespace HHMCore.WebAPI.Controllers;
 
@@ -23,7 +23,7 @@ public class TeacherController : ControllerBase
     [Authorize(Roles = AppRoles.Admin)]
     public async Task<IActionResult> Create([FromBody] CreateTeacherDto dto)
     {
-        var result = await _teacherService.CreateAsync(dto, GetCurrentUserEmail());
+        var result = await _teacherService.CreateAsync(dto, GetCurrentUserEmail());//by getting user email are we getting the user during the create method
         return result.Success ? Ok(result) : BadRequest(result);
     }
 
@@ -61,10 +61,6 @@ public class TeacherController : ControllerBase
     [Authorize(Roles = AppRoles.Admin)]
     public async Task<IActionResult> Update(Guid id, [FromBody] UpdateTeacherDto dto)
     {
-        if (id != dto.Id)
-        {
-            return BadRequest(new { success = false, message = "ID in URL does not match ID in body." });
-        }
 
         var existing = await _teacherService.GetByIdAsync(id);
         if (!existing.Success)
@@ -72,7 +68,7 @@ public class TeacherController : ControllerBase
             return NotFound(existing);
         }
 
-        var result = await _teacherService.UpdateAsync(dto, GetCurrentUserEmail());
+        var result = await _teacherService.UpdateAsync(id, dto, GetCurrentUserEmail());
         return result.Success ? Ok(result) : BadRequest(result);
     }
 
@@ -80,7 +76,7 @@ public class TeacherController : ControllerBase
     [Authorize(Roles = AppRoles.Admin)]
     public async Task<IActionResult> Delete(Guid id)
     {
-        var deletedBy = User.FindFirstValue(ClaimTypes.Email) ?? "system";
+        var deletedBy = GetCurrentUserEmail();//i can just write GetCurrentUserEmail() 
         var result = await _teacherService.DeleteAsync(id, deletedBy);
         return result.Success ? Ok(result) : NotFound(result);
     }
@@ -97,7 +93,7 @@ public class TeacherController : ControllerBase
     [Authorize(Roles = AppRoles.Teacher)]
     public async Task<IActionResult> UpdateMyProfile([FromBody] UpdateTeacherProfileDto dto)
     {
-        var userId = GetCurrentUserId();               
+        var userId = GetCurrentUserId();
         if (string.IsNullOrEmpty(userId))
         {
             return Unauthorized();
