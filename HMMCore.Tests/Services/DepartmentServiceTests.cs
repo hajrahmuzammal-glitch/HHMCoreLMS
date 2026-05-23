@@ -87,13 +87,15 @@ public sealed class DepartmentServiceTests
     [Fact]
     public async Task CreateAsync_ValidDto_ReturnsSuccess()
     {
-        // CreateAsync uses FindAsync(...).Any() — not ExistsAsync
+        // Arrange
         SetupNoDuplicates();
         _repo.Setup(r => r.AddAsync(It.IsAny<Department>())).Returns(Task.CompletedTask);
         _uow.Setup(u => u.SaveChangesAsync()).ReturnsAsync(1);
 
+        //Act
         var result = await _sut.CreateAsync(ValidCreate(), "admin@test.com");
 
+        //Assert
         result.Success.Should().BeTrue();
         result.Data.Should().NotBeNull();
         result.Data!.Name.Should().Be("Computer Science");
@@ -124,8 +126,10 @@ public sealed class DepartmentServiceTests
              .ReturnsAsync(false)   // name check passes
              .ReturnsAsync(true);
 
+        //Act
         var result = await _sut.CreateAsync(ValidCreate(), "admin@test.com");
 
+        //Assert
         result.Success.Should().BeFalse();
         result.Message.Should().Contain("already exists");
         _repo.Verify(r => r.AddAsync(It.IsAny<Department>()), Times.Never);
@@ -135,6 +139,7 @@ public sealed class DepartmentServiceTests
     [Fact]
     public async Task CreateAsync_UppercasesCode()
     {
+        //Arrange
         Department? captured = null;
         SetupNoDuplicates();
         _repo.Setup(r => r.AddAsync(It.IsAny<Department>()))
@@ -142,16 +147,19 @@ public sealed class DepartmentServiceTests
              .Returns(Task.CompletedTask);
         _uow.Setup(u => u.SaveChangesAsync()).ReturnsAsync(1);
 
+        //Act
         var dto = ValidCreate();
         dto.Code = "cs";
         await _sut.CreateAsync(dto, "admin@test.com");
 
+        //Assert
         captured!.Code.Should().Be("CS");
     }
 
     [Fact]
     public async Task CreateAsync_SetsCreatedByFromParameter()
     {
+        //Arrange 
         Department? captured = null;
         SetupNoDuplicates();
         _repo.Setup(r => r.AddAsync(It.IsAny<Department>()))
@@ -159,14 +167,17 @@ public sealed class DepartmentServiceTests
              .Returns(Task.CompletedTask);
         _uow.Setup(u => u.SaveChangesAsync()).ReturnsAsync(1);
 
+        //Act
         await _sut.CreateAsync(ValidCreate(), "admin@test.com");
 
+        //Assert
         captured!.CreatedBy.Should().Be("admin@test.com");
     }
 
     [Fact]
     public async Task CreateAsync_SetsIsActiveTrue()
     {
+        //Arrange
         Department? captured = null;
         SetupNoDuplicates();
         _repo.Setup(r => r.AddAsync(It.IsAny<Department>()))
@@ -174,8 +185,10 @@ public sealed class DepartmentServiceTests
              .Returns(Task.CompletedTask);
         _uow.Setup(u => u.SaveChangesAsync()).ReturnsAsync(1);
 
+        //Act
         await _sut.CreateAsync(ValidCreate(), "admin@test.com");
 
+        //Assert
         captured!.IsActive.Should().BeTrue();
     }
 
@@ -187,8 +200,10 @@ public sealed class DepartmentServiceTests
         _repo.Setup(r => r.AddAsync(It.IsAny<Department>())).Returns(Task.CompletedTask);
         _uow.Setup(u => u.SaveChangesAsync()).ReturnsAsync(1);
 
+        //Act
         await _sut.CreateAsync(ValidCreate(), "admin@test.com");
 
+        //Assert
         _uow.Verify(u => u.SaveChangesAsync(), Times.Once);
     }
 
@@ -197,11 +212,14 @@ public sealed class DepartmentServiceTests
     [Fact]
     public async Task GetAllAsync_ReturnsMappedList()
     {
+        //Arrange
         _repo.Setup(r => r.GetAllAsync())
              .ReturnsAsync(new List<Department> { Make(), Make("Electrical", "EE") });
 
+        //Act
         var result = await _sut.GetAllAsync();
 
+        //Assert
         result.Success.Should().BeTrue();
         result.Data.Should().HaveCount(2);
     }
@@ -209,10 +227,13 @@ public sealed class DepartmentServiceTests
     [Fact]
     public async Task GetAllAsync_EmptyTable_ReturnsSuccessWithEmptyList()
     {
+        //Arrange
         _repo.Setup(r => r.GetAllAsync()).ReturnsAsync(new List<Department>());
 
+        //Act
         var result = await _sut.GetAllAsync();
 
+        //Assert
         result.Success.Should().BeTrue();
         result.Data.Should().BeEmpty();
     }
@@ -222,10 +243,13 @@ public sealed class DepartmentServiceTests
     [Fact]
     public async Task GetByIdAsync_Found_ReturnsMappedDto()
     {
+        //Arrange
         _repo.Setup(r => r.GetByIdAsync(DeptId)).ReturnsAsync(Make());
 
+        //Act
         var result = await _sut.GetByIdAsync(DeptId);
 
+        //Assert
         result.Success.Should().BeTrue();
         result.Data!.Name.Should().Be("Computer Science");
         result.Data.Code.Should().Be("CS");
@@ -234,11 +258,14 @@ public sealed class DepartmentServiceTests
     [Fact]
     public async Task GetByIdAsync_NotFound_ReturnsFailure()
     {
+        //Arrange
         _repo.Setup(r => r.GetByIdAsync(It.IsAny<Guid>()))
              .ReturnsAsync((Department?)null);
 
+        //Act
         var result = await _sut.GetByIdAsync(Guid.NewGuid());
 
+        //Assert
         result.Success.Should().BeFalse();
         result.Message.Should().Contain("not found");
     }
@@ -248,14 +275,17 @@ public sealed class DepartmentServiceTests
     [Fact]
     public async Task UpdateAsync_ValidDto_ReturnsSuccessAndSavesOnce()
     {
+        //Arrange 
         var existing = Make();
         _repo.Setup(r => r.GetByIdAsync(DeptId)).ReturnsAsync(existing);
         _repo.Setup(r => r.ExistsAsync(It.IsAny<Expression<Func<Department, bool>>>()))
              .ReturnsAsync(false);
         _uow.Setup(u => u.SaveChangesAsync()).ReturnsAsync(1);
 
+        //Act
         var result = await _sut.UpdateAsync(DeptId, ValidUpdate(), "admin@test.com");
 
+        //Assert
         result.Success.Should().BeTrue();
         _uow.Verify(u => u.SaveChangesAsync(), Times.Once);
     }
@@ -263,11 +293,14 @@ public sealed class DepartmentServiceTests
     [Fact]
     public async Task UpdateAsync_NotFound_ReturnsFailure()
     {
+        //Arrange
         _repo.Setup(r => r.GetByIdAsync(It.IsAny<Guid>()))
              .ReturnsAsync((Department?)null);
 
+        //Act
         var result = await _sut.UpdateAsync(Guid.NewGuid(), ValidUpdate(), "admin@test.com");
 
+        //Assert
         result.Success.Should().BeFalse();
         result.Message.Should().Contain("not found");
         _uow.Verify(u => u.SaveChangesAsync(), Times.Never);
@@ -276,14 +309,17 @@ public sealed class DepartmentServiceTests
     [Fact]
     public async Task UpdateAsync_DuplicateName_ReturnsFailure()
     {
+        //Arrange
         var existing = Make();
         _repo.Setup(r => r.GetByIdAsync(DeptId)).ReturnsAsync(existing);
         _repo.SetupSequence(r => r.ExistsAsync(It.IsAny<Expression<Func<Department, bool>>>()))
              .ReturnsAsync(true);   // name duplicate check fires first
 
+        //Act
         var dto = new UpdateDepartmentDto { Name = "Electrical Engineering" };
         var result = await _sut.UpdateAsync(DeptId, dto, "admin@test.com");
 
+        //Assert
         result.Success.Should().BeFalse();
         result.Message.Should().Contain("name already exists");
         _uow.Verify(u => u.SaveChangesAsync(), Times.Never);
@@ -292,15 +328,18 @@ public sealed class DepartmentServiceTests
     [Fact]
     public async Task UpdateAsync_DuplicateCode_ReturnsFailure()
     {
+        //Arrange
         var existing = Make();
         _repo.Setup(r => r.GetByIdAsync(DeptId)).ReturnsAsync(existing);
         _repo.SetupSequence(r => r.ExistsAsync(It.IsAny<Expression<Func<Department, bool>>>()))
              .ReturnsAsync(false)   // name check passes
              .ReturnsAsync(true);   // code check fails
 
+        //Act
         var dto = new UpdateDepartmentDto { Name = "New Name", Code = "EE" };
         var result = await _sut.UpdateAsync(DeptId, dto, "admin@test.com");
 
+        //Assert
         result.Success.Should().BeFalse();
         result.Message.Should().Contain("code already exists");
         _uow.Verify(u => u.SaveChangesAsync(), Times.Never);
@@ -309,12 +348,15 @@ public sealed class DepartmentServiceTests
     [Fact]
     public async Task UpdateAsync_EmptyDto_RetainsAllExistingValues()
     {
+        //Arrange
         var existing = Make();
         _repo.Setup(r => r.GetByIdAsync(DeptId)).ReturnsAsync(existing);
         _uow.Setup(u => u.SaveChangesAsync()).ReturnsAsync(1);
 
+        //Act
         var result = await _sut.UpdateAsync(DeptId, new UpdateDepartmentDto(), "admin@test.com");
 
+        //Assert
         result.Success.Should().BeTrue();
         existing.Name.Should().Be("Computer Science");
         existing.Code.Should().Be("CS");
@@ -323,14 +365,17 @@ public sealed class DepartmentServiceTests
     [Fact]
     public async Task UpdateAsync_SetsUpdatedByAndUpdatedAt()
     {
+        //Arrange
         var existing = Make();
         _repo.Setup(r => r.GetByIdAsync(DeptId)).ReturnsAsync(existing);
         _repo.Setup(r => r.ExistsAsync(It.IsAny<Expression<Func<Department, bool>>>()))
              .ReturnsAsync(false);
         _uow.Setup(u => u.SaveChangesAsync()).ReturnsAsync(1);
 
+        //Act
         await _sut.UpdateAsync(DeptId, ValidUpdate(), "admin@test.com");
 
+        //Assert
         existing.UpdatedBy.Should().Be("admin@test.com");
         existing.UpdatedAt.Should().NotBeNull();
     }
@@ -338,45 +383,48 @@ public sealed class DepartmentServiceTests
     [Fact]
     public async Task UpdateAsync_IsActiveProvided_UpdatesIsActive()
     {
+        //Arrange
         var existing = Make();
         existing.IsActive = true;
         _repo.Setup(r => r.GetByIdAsync(DeptId)).ReturnsAsync(existing);
         _uow.Setup(u => u.SaveChangesAsync()).ReturnsAsync(1);
 
+        //Act
         var dto = new UpdateDepartmentDto { IsActive = false };
         await _sut.UpdateAsync(DeptId, dto, "admin@test.com");
 
+        //Assert
         existing.IsActive.Should().BeFalse();
     }
 
     [Fact]
     public async Task UpdateAsync_IsActiveNull_RetainsExistingIsActive()
     {
+        //Arrange
         var existing = Make();
         existing.IsActive = true;
         _repo.Setup(r => r.GetByIdAsync(DeptId)).ReturnsAsync(existing);
         _uow.Setup(u => u.SaveChangesAsync()).ReturnsAsync(1);
 
+        //Act
         await _sut.UpdateAsync(DeptId, new UpdateDepartmentDto { IsActive = null }, "admin@test.com");
 
+        //Assert
         existing.IsActive.Should().BeTrue();
     }
-
-    // ── DeleteAsync ────────────────────────────────────────────────────────────
-    // IMPROVEMENT FLAGGED: DeleteAsync has no dependent-record guard.
-    // Deleting a department that has courses/students/teachers will orphan data.
-    // Add checks for _unitOfWork.Courses.ExistsAsync, Students, Teachers before Delete.
-    // Scheduled for: Session 12 refactor phase.
 
     [Fact]
     public async Task DeleteAsync_HasTeachers_ReturnsFailure()
     {
+        //Arrange
         _repo.Setup(r => r.GetByIdAsync(DeptId)).ReturnsAsync(Make());
         _teacherRepo.Setup(r => r.ExistsAsync(It.IsAny<Expression<Func<Teacher, bool>>>()))
                     .ReturnsAsync(true);
 
+        //Act
         var result = await _sut.DeleteAsync(DeptId, "admin@test.com");
 
+        //Assert
         result.Success.Should().BeFalse();
         result.Message.Should().Contain("Teachers");
         _repo.Verify(r => r.Delete(It.IsAny<Department>()), Times.Never);
@@ -386,14 +434,16 @@ public sealed class DepartmentServiceTests
     [Fact]
     public async Task DeleteAsync_HasStudents_ReturnsFailure()
     {
+        //Arrange
         _repo.Setup(r => r.GetByIdAsync(DeptId)).ReturnsAsync(Make());
-        _teacherRepo.Setup(r => r.ExistsAsync(It.IsAny<Expression<Func<Teacher, bool>>>()))
-                    .ReturnsAsync(false);
+        SetupAllDependentsEmpty();
         _studentRepo.Setup(r => r.ExistsAsync(It.IsAny<Expression<Func<Student, bool>>>()))
                     .ReturnsAsync(true);
 
+        //Act
         var result = await _sut.DeleteAsync(DeptId, "admin@test.com");
 
+        //Assert
         result.Success.Should().BeFalse();
         result.Message.Should().Contain("Students");
         _repo.Verify(r => r.Delete(It.IsAny<Department>()), Times.Never);
