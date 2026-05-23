@@ -399,4 +399,62 @@ public sealed class DepartmentServiceTests
         _repo.Verify(r => r.Delete(It.IsAny<Department>()), Times.Never);
         _uow.Verify(u => u.SaveChangesAsync(), Times.Never);
     }
+
+    [Fact]
+    public async Task DeleteAsync_HasCourses_ReturnsFailure()
+    {
+        //Arrange
+        _repo.Setup(r => r.GetByIdAsync(DeptId)).ReturnsAsync(Make());
+        SetupAllDependentsEmpty();
+        _courseRepo.Setup(r => r.ExistsAsync(It.IsAny<Expression<Func<Course, bool>>>()))
+                   .ReturnsAsync(true);
+
+        //Act
+        var result = await _sut.DeleteAsync(DeptId, "admin@test.com");
+
+        //Assert
+        result.Success.Should().BeFalse();
+        result.Message.Should().Contain("Courses");
+        _repo.Verify(r => r.Delete(It.IsAny<Department>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task DeleteAsync_HasCourseAssignments_ReturnsFailure()
+    {
+        //Arrange
+        _repo.Setup(r => r.GetByIdAsync(DeptId)).ReturnsAsync(Make());
+        SetupAllDependentsEmpty();
+        _courseAssignmentRepo.Setup(r => r.ExistsAsync(It.IsAny<Expression<Func<CourseAssignment, bool>>>()))
+                             .ReturnsAsync(true);
+
+        //Act
+        var result = await _sut.DeleteAsync(DeptId, "admin@test.com");
+
+        //Assert
+        result.Success.Should().BeFalse();
+        result.Message.Should().Contain("Course assignments");
+        _repo.Verify(r => r.Delete(It.IsAny<Department>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task DeleteAsync_NoDependents_SoftDeletesAndStampsAudit()
+    {
+        //Arrange
+        var dept = Make();
+        _repo.Setup(r => r.GetByIdAsync(DeptId)).ReturnsAsync(dept);
+        SetupAllDependentsEmpty();
+        _uow.Setup(u => u.SaveChangesAsync()).ReturnsAsync(1);
+
+        //Act
+        var result = await _sut.DeleteAsync(DeptId, "admin@test.com");
+
+        //Assert
+        result.Success.Should().BeTrue();
+        dept.UpdatedBy.Should().Be("admin@test.com");
+        dept.UpdatedAt.Should().NotBeNull();
+        _repo.Verify(r => r.Delete(dept), Times.Once);
+        _uow.Verify(u => u.SaveChangesAsync(), Times.Once);
+    }
+
+    
 }
