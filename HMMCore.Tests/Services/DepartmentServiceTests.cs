@@ -1,10 +1,8 @@
 using System.Linq.Expressions;
-using AutoMapper;
 using FluentAssertions;
 using HHMCore.Core.DTOs.Department;
 using HHMCore.Core.Entities;
 using HHMCore.Core.Interfaces;
-using HHMCore.Core.Mappings;
 using HHMCore.Core.Services;
 using Moq;
 
