@@ -89,9 +89,28 @@ public sealed class DepartmentServiceTests
     }
 
     [Fact]
+    public async Task CreateAsync_DuplicateName_ReturnsFailure()
+    {
+        //Arrange
+        _repo.SetupSequence(r => r.ExistsAsync(It.IsAny<Expression<Func<Department, bool>>>()))
+             .ReturnsAsync(true)   
+             .ReturnsAsync(false);  // code check passes
+        //Act
+        var result = await _sut.CreateAsync(ValidCreate(), "admin@test.com");
+
+        //Assert
+        result.Success.Should().BeFalse();
+        result.Message.Should().Contain("already exists");
+        _repo.Verify(r => r.AddAsync(It.IsAny<Department>()), Times.Never);
+        _uow.Verify(u => u.SaveChangesAsync(), Times.Never);
+    }
+
+    [Fact]
     public async Task CreateAsync_DuplicateCode_ReturnsFailure()
     {
-        _repo.Setup(r => r.ExistsAsync(It.IsAny<Expression<Func<Department, bool>>>()))
+        //Arrange
+        _repo.SetupSequence(r => r.ExistsAsync(It.IsAny<Expression<Func<Department, bool>>>()))
+             .ReturnsAsync(false)   // name check passes
              .ReturnsAsync(true);
 
         var result = await _sut.CreateAsync(ValidCreate(), "admin@test.com");
