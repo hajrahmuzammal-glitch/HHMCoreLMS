@@ -180,9 +180,7 @@ public class TeacherService : ITeacherService
             return ApiResponse<TeacherResponseDto>.Fail("Teacher profile not found.");
         }
 
-        teacher.PhoneNumber = string.IsNullOrWhiteSpace(dto.PhoneNumber) ? teacher.PhoneNumber : dto.PhoneNumber.Trim();
-        teacher.Address = string.IsNullOrWhiteSpace(dto.Address) ? teacher.Address : dto.Address.Trim();
-        teacher.Qualification = string.IsNullOrWhiteSpace(dto.Qualification) ? teacher.Qualification : dto.Qualification.Trim();
+        teacher.ApplyProfileUpdate(dto);
 
         teacher.UpdatedAt = DateTimeOffset.UtcNow;
         teacher.UpdatedBy = userId;
