@@ -15,18 +15,25 @@ public sealed class DepartmentServiceTests
     private readonly DepartmentService _sut;
     private readonly Mock<IGenericRepository<Teacher>> _teacherRepo;
     private readonly Mock<IGenericRepository<Student>> _studentRepo;
+    private readonly Mock<IGenericRepository<Course>> _courseRepo;
+    private readonly Mock<IGenericRepository<CourseAssignment>> _courseAssignmentRepo;
 
     public DepartmentServiceTests()
     {
         _uow = new Mock<IUnitOfWork>();
         _repo = new Mock<IGenericRepository<Department>>();
+
         _teacherRepo = new Mock<IGenericRepository<Teacher>>();
         _studentRepo = new Mock<IGenericRepository<Student>>();
+        _courseRepo = new Mock<IGenericRepository<Course>>();
+        _courseAssignmentRepo = new Mock<IGenericRepository<CourseAssignment>>();
 
         _uow.Setup(u => u.Departments).Returns(_repo.Object);
-
         _uow.Setup(u => u.Teachers).Returns(_teacherRepo.Object);
         _uow.Setup(u => u.Students).Returns(_studentRepo.Object);
+        _uow.Setup(u => u.Courses).Returns(_courseRepo.Object);
+        _uow.Setup(u => u.CourseAssignments).Returns(_courseAssignmentRepo.Object);
+
         _sut = new DepartmentService(_uow.Object);
     }
 
