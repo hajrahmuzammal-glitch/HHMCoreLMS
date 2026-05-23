@@ -71,6 +71,17 @@ public sealed class DepartmentServiceTests
          .ReturnsAsync(false)
          .ReturnsAsync(false);
 
+    private void SetupAllDependentsEmpty()
+    {
+        _teacherRepo.Setup(r => r.ExistsAsync(It.IsAny<Expression<Func<Teacher, bool>>>()))
+                    .ReturnsAsync(false);
+        _studentRepo.Setup(r => r.ExistsAsync(It.IsAny<Expression<Func<Student, bool>>>()))
+                    .ReturnsAsync(false);
+        _courseRepo.Setup(r => r.ExistsAsync(It.IsAny<Expression<Func<Course, bool>>>()))
+                   .ReturnsAsync(false);
+        _courseAssignmentRepo.Setup(r => r.ExistsAsync(It.IsAny<Expression<Func<CourseAssignment, bool>>>()))
+                             .ReturnsAsync(false);
+    }
     // ── CreateAsync ────────────────────────────────────────────────────────────
 
     [Fact]
