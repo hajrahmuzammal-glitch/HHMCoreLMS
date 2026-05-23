@@ -147,8 +147,9 @@ public class DepartmentService : IDepartmentService
             return ApiResponse.Fail("Department not found.");
         }
 
-        //Check for associated teachers and students before deletion//
-        //Teacher Dependency Check
+        //Dependency Checks - Teachers, Students, Courses, Course Assignments
+        // Block deletion if any related records exist.
+
         var hasTeachers = await _unitOfWork.Teachers
 
         .ExistsAsync(t => t.DepartmentId == id);
@@ -158,7 +159,7 @@ public class DepartmentService : IDepartmentService
 
         }
 
-        //Student Dependency Check
+       
         var hasStudents = await _unitOfWork.Students
             .ExistsAsync(s => s.DepartmentId == id);
         if (hasStudents)
@@ -166,12 +167,28 @@ public class DepartmentService : IDepartmentService
             return ApiResponse.Fail("Cannot delete this department. Students are enrolled in it.");
         }
 
-        //Soft Deletion - Marking as Inactive
-        _unitOfWork.Departments.Delete(department);
+        var hasCourses = await _unitOfWork.Courses
+            .ExistsAsync(c => c.DepartmentId == id);
+        if (hasCourses)
+        {
+            return ApiResponse.Fail("Cannot delete this department. Courses are assigned to it.");
+        }
+        //CourseAssigment is storing department as denormalized FK for conflict detection
+        //Must Check independently - soft-deleted courses don't cascade to the assignements
+        var hasCourseAssignments = await _unitOfWork.CourseAssignments
+            .ExistsAsync(ca => ca.DepartmentId == id);
+        if (hasCourseAssignments)
+        {
+            return ApiResponse.Fail("Cannot delete this department. Course assignments are linked to it.");
+        }
 
-        //Updating audit fields
+        //Audit Fields stamped before the soft deletion
+
         department.UpdatedAt = DateTimeOffset.UtcNow;
         department.UpdatedBy = deletedBy;
+
+        //Soft Deletion - Marking as Inactive
+        _unitOfWork.Departments.Delete(department);
 
         //saveing changes
         await _unitOfWork.SaveChangesAsync();

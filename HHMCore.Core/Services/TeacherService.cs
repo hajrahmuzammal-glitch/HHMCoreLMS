@@ -167,9 +167,15 @@ public class TeacherService : ITeacherService
         return ApiResponse<IReadOnlyList<TeacherResponseDto>>.Ok(response, "Teachers retrieved successfully.");
     }
 
+    //Teacher can update the profiles according to options provided
+    //Cannot access or changed the field like salary,joining date , designation ,department and identity providing feilds : preventing mass assignment
+    //Password canges are handled separately
+    //Will add the display name options in future according to client requirement
+
     public async Task<ApiResponse<TeacherResponseDto>> UpdateMyProfileAsync(
         string userId, UpdateTeacherProfileDto dto)
     {
+        //fetch with navigation properties needed for the response DTO
         var teacher = await _unitOfWork.Teachers
             .FindOneWithIncludesAsync(
                 t => t.UserId == userId,
@@ -180,19 +186,21 @@ public class TeacherService : ITeacherService
             return ApiResponse<TeacherResponseDto>.Fail("Teacher profile not found.");
         }
 
-        teacher.PhoneNumber = string.IsNullOrWhiteSpace(dto.PhoneNumber) ? teacher.PhoneNumber : dto.PhoneNumber.Trim();
-        teacher.Address = string.IsNullOrWhiteSpace(dto.Address) ? teacher.Address : dto.Address.Trim();
-        teacher.Qualification = string.IsNullOrWhiteSpace(dto.Qualification) ? teacher.Qualification : dto.Qualification.Trim();
+        teacher.ApplyProfileUpdate(dto);
 
+        //Uses UserId and not email as teachers can update their own records
         teacher.UpdatedAt = DateTimeOffset.UtcNow;
         teacher.UpdatedBy = userId;
 
         _unitOfWork.Teachers.Update(teacher);
+
+        //Save
         await _unitOfWork.SaveChangesAsync();
 
         var response = teacher.ToResponseDto();
         return ApiResponse<TeacherResponseDto>.Ok(response, "Profile updated successfully.");
     }
+
 
     public async Task<ApiResponse<TeacherResponseDto>> UpdateAsync(
        Guid id, UpdateTeacherDto dto, string updatedBy)

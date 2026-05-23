@@ -8,23 +8,32 @@ public static class TeacherMappings
 {
     public static TeacherResponseDto ToResponseDto(this Teacher teacher) => new()
     {
+        //Employee Info
         Id = teacher.Id,
         FullName = teacher.FullName,
         Email = teacher.User.Email!,
         EmployeeId = teacher.EmployeeId,
         Cnic = teacher.Cnic,
-        DesignationId = teacher.DesignationId,
-        DesignationTitle = teacher.Designation.Title,
         Gender = teacher.Gender.ToString(),
-        Salary = teacher.Salary,
         PhoneNumber = teacher.PhoneNumber,
         Address = teacher.Address,
         DateOfBirth = teacher.DateOfBirth,
+        Qualification = teacher.Qualification,
+
+        //Navaigation Properties
+        DesignationId = teacher.DesignationId,
+        DesignationTitle = teacher.Designation.Title,
         DepartmentId = teacher.DepartmentId,
         DepartmentName = teacher.Department.Name,
-        Qualification = teacher.Qualification,
+
+        //Joining Info
+        Salary = teacher.Salary,
         JoiningDate = teacher.JoiningDate,
+
+        //Status Info
         Status = teacher.Status,
+
+        //Audit Info
         CreatedBy = teacher.CreatedBy,
         CreatedAt = teacher.CreatedAt,
         UpdatedAt = teacher.UpdatedAt,
@@ -84,31 +93,29 @@ public static class TeacherMappings
             teacher.Qualification = dto.Qualification.Trim();
         }
 
-        //------- Enum values ----------//
-
         if (dto.Gender.HasValue)
         {
             teacher.Gender = dto.Gender.Value;
         }
 
-        //------- Date Time Values ----------//
         if (dto.DateOfBirth.HasValue)
         {
             teacher.DateOfBirth = dto.DateOfBirth.Value;
         }
+
+        //Joining Info
         if (dto.JoiningDate.HasValue)
         {
             teacher.JoiningDate = dto.JoiningDate.Value;
         }
-
-        //------- Numeric Values ----------//
 
         if (dto.Salary.HasValue)
         {
             teacher.Salary = dto.Salary.Value;
         }
 
-        //------- FK Ids values ----------//
+        //Navigation Properties
+
         if (dto.DesignationId.HasValue)
         {
             teacher.DesignationId = dto.DesignationId.Value;
@@ -118,5 +125,20 @@ public static class TeacherMappings
             teacher.DepartmentId = dto.DepartmentId.Value;
         }
 
+    }
+    public static void ApplyProfileUpdate(this Teacher teacher, UpdateTeacherProfileDto dto)
+    {
+        if (!string.IsNullOrWhiteSpace(dto.PhoneNumber))
+        {
+            teacher.PhoneNumber = dto.PhoneNumber.Trim();
+        }
+        if (!string.IsNullOrWhiteSpace(dto.Address))
+        {
+            teacher.Address = dto.Address.Trim();
+        }
+        if (!string.IsNullOrWhiteSpace(dto.Qualification))
+        {
+            teacher.Qualification = dto.Qualification.Trim();
+        }
     }
 }
