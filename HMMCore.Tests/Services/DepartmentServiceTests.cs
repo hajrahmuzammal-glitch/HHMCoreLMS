@@ -66,6 +66,10 @@ public sealed class DepartmentServiceTests
         Name = "Computer Engineering",
         Code = "CE"
     };
+    private void SetupNoDuplicates() =>
+    _repo.SetupSequence(r => r.ExistsAsync(It.IsAny<Expression<Func<Department, bool>>>()))
+         .ReturnsAsync(false)
+         .ReturnsAsync(false);
 
     // ── CreateAsync ────────────────────────────────────────────────────────────
 
@@ -73,8 +77,7 @@ public sealed class DepartmentServiceTests
     public async Task CreateAsync_ValidDto_ReturnsSuccess()
     {
         // CreateAsync uses FindAsync(...).Any() — not ExistsAsync
-        _repo.Setup(r => r.FindAsync(It.IsAny<Expression<Func<Department, bool>>>()))
-             .ReturnsAsync(new List<Department>());
+        SetupNoDuplicates();
         _repo.Setup(r => r.AddAsync(It.IsAny<Department>())).Returns(Task.CompletedTask);
         _uow.Setup(u => u.SaveChangesAsync()).ReturnsAsync(1);
 
@@ -103,8 +106,7 @@ public sealed class DepartmentServiceTests
     public async Task CreateAsync_UppercasesCode()
     {
         Department? captured = null;
-        _repo.Setup(r => r.FindAsync(It.IsAny<Expression<Func<Department, bool>>>()))
-             .ReturnsAsync(new List<Department>());
+        SetupNoDuplicates();
         _repo.Setup(r => r.AddAsync(It.IsAny<Department>()))
              .Callback<Department>(d => captured = d)
              .Returns(Task.CompletedTask);
@@ -121,8 +123,7 @@ public sealed class DepartmentServiceTests
     public async Task CreateAsync_SetsCreatedByFromParameter()
     {
         Department? captured = null;
-        _repo.Setup(r => r.FindAsync(It.IsAny<Expression<Func<Department, bool>>>()))
-             .ReturnsAsync(new List<Department>());
+        SetupNoDuplicates();
         _repo.Setup(r => r.AddAsync(It.IsAny<Department>()))
              .Callback<Department>(d => captured = d)
              .Returns(Task.CompletedTask);
@@ -137,8 +138,7 @@ public sealed class DepartmentServiceTests
     public async Task CreateAsync_SetsIsActiveTrue()
     {
         Department? captured = null;
-        _repo.Setup(r => r.FindAsync(It.IsAny<Expression<Func<Department, bool>>>()))
-             .ReturnsAsync(new List<Department>());
+        SetupNoDuplicates();
         _repo.Setup(r => r.AddAsync(It.IsAny<Department>()))
              .Callback<Department>(d => captured = d)
              .Returns(Task.CompletedTask);
@@ -152,8 +152,8 @@ public sealed class DepartmentServiceTests
     [Fact]
     public async Task CreateAsync_CallsSaveChangesExactlyOnce()
     {
-        _repo.Setup(r => r.FindAsync(It.IsAny<Expression<Func<Department, bool>>>()))
-             .ReturnsAsync(new List<Department>());
+        //Arrange
+        SetupNoDuplicates();
         _repo.Setup(r => r.AddAsync(It.IsAny<Department>())).Returns(Task.CompletedTask);
         _uow.Setup(u => u.SaveChangesAsync()).ReturnsAsync(1);
 
