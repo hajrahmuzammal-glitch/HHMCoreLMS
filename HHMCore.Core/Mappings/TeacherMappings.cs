@@ -119,4 +119,19 @@ public static class TeacherMappings
         }
 
     }
+    public static void ApplyProfileUpdate(this Teacher teacher, UpdateTeacherProfileDto dto)
+    {
+        if (!string.IsNullOrWhiteSpace(dto.PhoneNumber))
+        {
+            teacher.PhoneNumber = dto.PhoneNumber.Trim();
+        }
+        if (!string.IsNullOrWhiteSpace(dto.Address))
+        {
+            teacher.Address = dto.Address.Trim();
+        }
+        if (!string.IsNullOrWhiteSpace(dto.Qualification))
+        {
+            teacher.Qualification = dto.Qualification.Trim();
+        }
+    }
 }
