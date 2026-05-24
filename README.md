@@ -4,6 +4,9 @@
 
 **A University Learning Management System built with ASP.NET Core 8 Web API**
 
+> Previously contributed as @HafizaHajrah. 
+> All active development is now under this account.
+
 A portfolio-grade, production-architecture LMS designed for universities — covering student management, teacher management, scheduling, attendance, grading, and fee management. Built with clean layered architecture and industry-standard patterns.
 
 ---
