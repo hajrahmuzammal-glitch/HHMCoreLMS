@@ -9,7 +9,6 @@ public sealed class UpdateTeacherValidator : AbstractValidator<UpdateTeacherDto>
     {
 
         RuleFor(x => x.FullName)
-         .NotEmpty().WithMessage("Full name is required.")
          .MaximumLength(100).WithMessage("Full name cannot exceed 100 characters.")
          .When(x => x.FullName is not null);
 
