@@ -36,14 +36,18 @@ public class DepartmentService : IDepartmentService
         var nameExists = await _unitOfWork.Departments
             .ExistsAsync(x => x.Name.ToLower() == dto.Name.ToLower());
         if (nameExists)
+        {
             return ApiResponse<DepartmentResponseDto>.Fail(
                 "A department with this name already exists.");
+        }
 
         var codeExists = await _unitOfWork.Departments
             .ExistsAsync(x => x.Code == dto.Code.ToUpper());
         if (codeExists)
+        {
             return ApiResponse<DepartmentResponseDto>.Fail(
                 "A department with this code already exists.");
+        }
 
         var department = dto.ToEntity(createdBy);
 
@@ -62,7 +66,9 @@ public class DepartmentService : IDepartmentService
     {
         var department = await _unitOfWork.Departments.GetByIdAsync(id);
         if (department == null)
+        {
             return ApiResponse<DepartmentResponseDto>.Fail("Department not found.");
+        }
 
         return ApiResponse<DepartmentResponseDto>.Ok(department.ToResponseDto());
     }
@@ -87,7 +93,9 @@ public class DepartmentService : IDepartmentService
     {
         var department = await _unitOfWork.Departments.GetByIdAsync(id);
         if (department == null)
+        {
             return ApiResponse<DepartmentResponseDto>.Fail("Department not found.");
+        }
 
         // Duplicate checks only run when the field is actually being changed.
         // The current record is excluded from the check using d.Id != id.
@@ -96,8 +104,10 @@ public class DepartmentService : IDepartmentService
             var nameExists = await _unitOfWork.Departments
                 .ExistsAsync(d => d.Name.ToLower() == dto.Name.ToLower() && d.Id != id);
             if (nameExists)
+            {
                 return ApiResponse<DepartmentResponseDto>.Fail(
                     "A department with this name already exists.");
+            }
         }
 
         if (!string.IsNullOrWhiteSpace(dto.Code))
@@ -105,8 +115,10 @@ public class DepartmentService : IDepartmentService
             var codeExists = await _unitOfWork.Departments
                 .ExistsAsync(d => d.Code.ToUpper() == dto.Code.ToUpper() && d.Id != id);
             if (codeExists)
+            {
                 return ApiResponse<DepartmentResponseDto>.Fail(
                     "A department with this code already exists.");
+            }
         }
 
         // ApplyUpdate handles null-safe field merging — only provided fields are overwritten.
@@ -129,7 +141,9 @@ public class DepartmentService : IDepartmentService
     {
         var department = await _unitOfWork.Departments.GetByIdAsync(id);
         if (department == null)
+        {
             return ApiResponse.Fail("Department not found.");
+        }
 
         // Referential integrity is enforced at the service layer.
         // A department cannot be deleted while any dependent records exist,
@@ -137,20 +151,26 @@ public class DepartmentService : IDepartmentService
         var hasTeachers = await _unitOfWork.Teachers
             .ExistsAsync(t => t.DepartmentId == id);
         if (hasTeachers)
+        {
             return ApiResponse.Fail(
                 "Cannot delete this department. Teachers are assigned to it.");
+        }
 
         var hasStudents = await _unitOfWork.Students
             .ExistsAsync(s => s.DepartmentId == id);
         if (hasStudents)
+        {
             return ApiResponse.Fail(
                 "Cannot delete this department. Students are enrolled in it.");
+        }
 
         var hasCourses = await _unitOfWork.Courses
             .ExistsAsync(c => c.DepartmentId == id);
         if (hasCourses)
+        {
             return ApiResponse.Fail(
                 "Cannot delete this department. Courses are assigned to it.");
+        }
 
         // CourseAssignment carries a denormalized DepartmentId for conflict detection.
         // This is checked independently because soft-deleting a course does not
@@ -158,11 +178,12 @@ public class DepartmentService : IDepartmentService
         var hasCourseAssignments = await _unitOfWork.CourseAssignments
             .ExistsAsync(ca => ca.DepartmentId == id);
         if (hasCourseAssignments)
+        {
             return ApiResponse.Fail(
                 "Cannot delete this department. Course assignments are linked to it.");
+        }
 
-        //Soft delete — audit fields record who removed this and when.
-        // Stamp audit fields before delete — entity state is unreliable after.
+        // Soft delete — audit fields stamped before the call; entity state is unreliable after.
 
         department.UpdatedAt = DateTimeOffset.UtcNow;
         department.UpdatedBy = deletedBy;
