@@ -29,7 +29,7 @@ public sealed class UpdateTeacherValidator : AbstractValidator<UpdateTeacherDto>
             .When(x => x.DepartmentId.HasValue);
 
         RuleFor(x => x.PhoneNumber)
-            .MaximumLength(20).WithMessage("Phone number cannot exceed 20 characters.")
+            .Matches(@"^03[0-9]{9}$").WithMessage("Phone number must be a valid Pakistani number (e.g. 03001234567).")
             .When(x => x.PhoneNumber != null);
 
         RuleFor(x => x.Address)

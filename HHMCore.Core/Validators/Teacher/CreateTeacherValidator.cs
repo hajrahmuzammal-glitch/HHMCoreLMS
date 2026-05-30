@@ -40,7 +40,8 @@ public sealed class CreateTeacherValidator : AbstractValidator<CreateTeacherDto>
             .Must(id => id != Guid.Empty).WithMessage("A valid Department ID is required.");
 
         RuleFor(x => x.PhoneNumber)
-            .MaximumLength(20).WithMessage("Phone number cannot exceed 20 characters.");
+            .Matches(@"^03[0-9]{9}$").WithMessage("Phone number must be a valid Pakistani number (e.g. 03001234567).")
+
 
         RuleFor(x => x.Address)
             .MaximumLength(250).WithMessage("Address cannot exceed 250 characters.");
