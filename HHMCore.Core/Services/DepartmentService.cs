@@ -1,4 +1,3 @@
-
 using HHMCore.Core.Common;
 using HHMCore.Core.DTOs.Department;
 using HHMCore.Core.Entities;
@@ -6,6 +5,14 @@ using HHMCore.Core.Interfaces;
 using HHMCore.Core.Mappings;
 
 namespace HHMCore.Core.Services;
+
+/// <summary>
+/// Handles all business logic for department management.
+/// </summary>
+/// <remarks>
+/// Departments are the top-level organizational unit — teachers, students,
+/// and courses all belong to a department.
+/// </remarks>
 
 public class DepartmentService : IDepartmentService
 {
@@ -16,184 +23,153 @@ public class DepartmentService : IDepartmentService
         _unitOfWork = unitOfWork;
     }
 
-    //Create //
+    // -------------------------------------------------------------------------
+    // CREATE
+    // -------------------------------------------------------------------------
 
-    public async Task<ApiResponse<DepartmentResponseDto>> CreateAsync(CreateDepartmentDto dto, string createdBy)
+    public async Task<ApiResponse<DepartmentResponseDto>> CreateAsync(
+        CreateDepartmentDto dto, string createdBy)
     {
-        //Check for duplicate Name and Code //
 
-        //Duplicate Name Check
+        // Name uses case-insensitive comparison to prevent near-duplicates like "CS" and "cs".
+        // Code is normalized to uppercase so storage is consistent regardless of what the caller sends.
         var nameExists = await _unitOfWork.Departments
-           .ExistsAsync(x => x.Name.ToLower() == dto.Name.ToLower());
+            .ExistsAsync(x => x.Name.ToLower() == dto.Name.ToLower());
         if (nameExists)
-        {
-            return ApiResponse<DepartmentResponseDto>.Fail("A department with this Name already exists.");
-        }
+            return ApiResponse<DepartmentResponseDto>.Fail(
+                "A department with this name already exists.");
 
-        //Duplicate Code Check
         var codeExists = await _unitOfWork.Departments
             .ExistsAsync(x => x.Code == dto.Code.ToUpper());
-
         if (codeExists)
-        {
-            return ApiResponse<DepartmentResponseDto>.Fail("A department with this Code already exists.");
-        }
-
-        //Instantiation of Department entity Object
+            return ApiResponse<DepartmentResponseDto>.Fail(
+                "A department with this code already exists.");
 
         var department = dto.ToEntity(createdBy);
 
-        //Adding to database
         await _unitOfWork.Departments.AddAsync(department);
-
-        //saving 
         await _unitOfWork.SaveChangesAsync();
 
-        //building response
-        var response =department.ToResponseDto();
-        return ApiResponse<DepartmentResponseDto>.Ok(response, "Department created successfully.");
+        return ApiResponse<DepartmentResponseDto>.Ok(
+            department.ToResponseDto(), "Department created successfully.");
     }
 
-    //Get department By Id
+    // -------------------------------------------------------------------------
+    // READ
+    // -------------------------------------------------------------------------
+
     public async Task<ApiResponse<DepartmentResponseDto>> GetByIdAsync(Guid id)
     {
-        //Fetching the department 
         var department = await _unitOfWork.Departments.GetByIdAsync(id);
-
         if (department == null)
-        {
             return ApiResponse<DepartmentResponseDto>.Fail("Department not found.");
-        }
 
-        //Building Response
-        var response = department.ToResponseDto();
-        return ApiResponse<DepartmentResponseDto>.Ok(response);
+        return ApiResponse<DepartmentResponseDto>.Ok(department.ToResponseDto());
     }
 
-    //Get All Departments
     public async Task<ApiResponse<IReadOnlyList<DepartmentResponseDto>>> GetAllAsync()
     {
-        //fetching all departments
         var departments = await _unitOfWork.Departments.GetAllAsync();
 
-        //Building Response
-        var response = departments.Select(t => t.ToResponseDto()).ToList();
+        var response = departments
+            .Select(d => d.ToResponseDto())
+            .ToList();
+
         return ApiResponse<IReadOnlyList<DepartmentResponseDto>>.Ok(response);
     }
 
-    //Update 
+    // -------------------------------------------------------------------------
+    // UPDATE
+    // -------------------------------------------------------------------------
+
     public async Task<ApiResponse<DepartmentResponseDto>> UpdateAsync(
-        Guid id,
-        UpdateDepartmentDto dto,
-        string updatedBy)
+        Guid id, UpdateDepartmentDto dto, string updatedBy)
     {
-        //Checking if the department exists
         var department = await _unitOfWork.Departments.GetByIdAsync(id);
         if (department == null)
-        {
             return ApiResponse<DepartmentResponseDto>.Fail("Department not found.");
-        }
 
-        //Updating feilds provided 
+        // Duplicate checks only run when the field is actually being changed.
+        // The current record is excluded from the check using d.Id != id.
         if (!string.IsNullOrWhiteSpace(dto.Name))
         {
-            // Check for duplicate name 
-            var nameExists = await _unitOfWork.Departments.ExistsAsync(
-                d => d.Name.ToLower() == dto.Name.ToLower() && d.Id != id);
+            var nameExists = await _unitOfWork.Departments
+                .ExistsAsync(d => d.Name.ToLower() == dto.Name.ToLower() && d.Id != id);
             if (nameExists)
-            {
                 return ApiResponse<DepartmentResponseDto>.Fail(
                     "A department with this name already exists.");
-            }
         }
 
         if (!string.IsNullOrWhiteSpace(dto.Code))
         {
-            // Check for duplicate Code
-            var codeExists = await _unitOfWork.Departments.ExistsAsync(
-                d => d.Code.ToUpper() == dto.Code.ToUpper() && d.Id != id);
+            var codeExists = await _unitOfWork.Departments
+                .ExistsAsync(d => d.Code.ToUpper() == dto.Code.ToUpper() && d.Id != id);
             if (codeExists)
-            {
                 return ApiResponse<DepartmentResponseDto>.Fail(
                     "A department with this code already exists.");
-            }
         }
 
-        //Updating the department entity w
+        // ApplyUpdate handles null-safe field merging — only provided fields are overwritten.
         department.ApplyUpdate(dto);
-
-        //Updating audit fields
         department.UpdatedAt = DateTimeOffset.UtcNow;
         department.UpdatedBy = updatedBy;
 
-        //saving changes
         _unitOfWork.Departments.Update(department);
         await _unitOfWork.SaveChangesAsync();
 
-        //Building Response
-        var responseDto = department.ToResponseDto();
-        return ApiResponse<DepartmentResponseDto>.Ok(responseDto, "Department updated successfully.");
+        return ApiResponse<DepartmentResponseDto>.Ok(
+            department.ToResponseDto(), "Department updated successfully.");
     }
 
-    //Delete
+    // -------------------------------------------------------------------------
+    // DELETE
+    // -------------------------------------------------------------------------
 
     public async Task<ApiResponse> DeleteAsync(Guid id, string deletedBy)
     {
-        //Checking if the department exists
         var department = await _unitOfWork.Departments.GetByIdAsync(id);
-
         if (department == null)
-        {
             return ApiResponse.Fail("Department not found.");
-        }
 
-        //Dependency Checks - Teachers, Students, Courses, Course Assignments
-        // Block deletion if any related records exist.
-
+        // Referential integrity is enforced at the service layer.
+        // A department cannot be deleted while any dependent records exist,
+        // regardless of their active/inactive state.
         var hasTeachers = await _unitOfWork.Teachers
-
-        .ExistsAsync(t => t.DepartmentId == id);
+            .ExistsAsync(t => t.DepartmentId == id);
         if (hasTeachers)
-        {
-            return ApiResponse.Fail("Cannot delete this department. Teachers are assigned to it.");
+            return ApiResponse.Fail(
+                "Cannot delete this department. Teachers are assigned to it.");
 
-        }
-
-       
         var hasStudents = await _unitOfWork.Students
             .ExistsAsync(s => s.DepartmentId == id);
         if (hasStudents)
-        {
-            return ApiResponse.Fail("Cannot delete this department. Students are enrolled in it.");
-        }
+            return ApiResponse.Fail(
+                "Cannot delete this department. Students are enrolled in it.");
 
         var hasCourses = await _unitOfWork.Courses
             .ExistsAsync(c => c.DepartmentId == id);
         if (hasCourses)
-        {
-            return ApiResponse.Fail("Cannot delete this department. Courses are assigned to it.");
-        }
-        //CourseAssigment is storing department as denormalized FK for conflict detection
-        //Must Check independently - soft-deleted courses don't cascade to the assignements
+            return ApiResponse.Fail(
+                "Cannot delete this department. Courses are assigned to it.");
+
+        // CourseAssignment carries a denormalized DepartmentId for conflict detection.
+        // This is checked independently because soft-deleting a course does not
+        // cascade to its assignments — orphaned assignments would remain.
         var hasCourseAssignments = await _unitOfWork.CourseAssignments
             .ExistsAsync(ca => ca.DepartmentId == id);
         if (hasCourseAssignments)
-        {
-            return ApiResponse.Fail("Cannot delete this department. Course assignments are linked to it.");
-        }
+            return ApiResponse.Fail(
+                "Cannot delete this department. Course assignments are linked to it.");
 
-        //Audit Fields stamped before the soft deletion
+        //Soft delete — audit fields record who removed this and when.
+        // Stamp audit fields before delete — entity state is unreliable after.
 
         department.UpdatedAt = DateTimeOffset.UtcNow;
         department.UpdatedBy = deletedBy;
 
-        //Soft Deletion - Marking as Inactive
         _unitOfWork.Departments.Delete(department);
-
-        //saveing changes
         await _unitOfWork.SaveChangesAsync();
 
-        //building response
         return ApiResponse.Ok("Department deleted successfully.");
     }
 }
