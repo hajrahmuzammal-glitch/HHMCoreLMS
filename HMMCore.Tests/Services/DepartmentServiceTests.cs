@@ -450,6 +450,7 @@ public sealed class DepartmentServiceTests
     {
         // Arrange
         _repo.Setup(r => r.GetByIdAsync(DeptId)).ReturnsAsync(Make());
+        SetupAllDependentsEmpty();
         _teacherRepo.Setup(r => r.ExistsAsync(It.IsAny<Expression<Func<Teacher, bool>>>()))
                     .ReturnsAsync(true);
 
