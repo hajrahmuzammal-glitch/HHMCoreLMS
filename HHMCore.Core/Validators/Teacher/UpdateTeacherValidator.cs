@@ -10,7 +10,7 @@ public sealed class UpdateTeacherValidator : AbstractValidator<UpdateTeacherDto>
 
         RuleFor(x => x.FullName)
          .MaximumLength(100).WithMessage("Full name cannot exceed 100 characters.")
-         .When(x => x.FullName is not null);
+         .When(x => string.IsNullOrWhiteSpace(x.FullName));
 
         RuleFor(x => x.DesignationId)
         .Must(id => id != Guid.Empty).WithMessage("A valid Designation ID is required.")
@@ -30,11 +30,11 @@ public sealed class UpdateTeacherValidator : AbstractValidator<UpdateTeacherDto>
 
         RuleFor(x => x.PhoneNumber)
             .Matches(@"^03[0-9]{9}$").WithMessage("Phone number must be a valid Pakistani number (e.g. 03001234567).")
-            .When(x => x.PhoneNumber != null);
+            .When(x => string.IsNullOrWhiteSpace(x.PhoneNumber));
 
         RuleFor(x => x.Address)
             .MaximumLength(250).WithMessage("Address cannot exceed 250 characters.")
-            .When(x => x.Address != null);
+            .When(x => string.IsNullOrWhiteSpace(x.Address));
 
         RuleFor(x => x.DateOfBirth)
             .Must(dob => dob!.Value >= new DateOnly(1940, 1, 1) &&
@@ -54,7 +54,7 @@ public sealed class UpdateTeacherValidator : AbstractValidator<UpdateTeacherDto>
         RuleFor(x => x.Qualification)
            //.NotEmpty().WithMessage("Qualification is required.")
            .MaximumLength(150).WithMessage("Qualification cannot exceed 150 characters.")
-           .When(x => x.Qualification != null);
+           .When(x => string.IsNullOrWhiteSpace(x.Qualification));
 
 
 
