@@ -8,9 +8,9 @@ A production-architecture University Learning Management System built with ASP.N
 
 ## What This Is
 
-HHMCore LMS handles the full administrative side of a university: student and teacher management, room and timetable scheduling, attendance, and grading. It is built as a real system with real constraints, not a tutorial outcome.
+HHMCore LMS handles the full administrative side of a university: student and teacher management, room and timetable scheduling, attendance, and grading. It is built as a real system with real constraints, with production standards in mind.
 
-Every architectural decision in this repository has a reason. Every bug documented here was caught, root-caused, and fixed before the next module was touched. The design decisions, corrections, and production concerns are all documented as they happened.
+The design decisions are documented with the reasoning behind them. The bugs are documented with root causes and what changed. Both are recorded as they happened, not cleaned up after the fact.
 
 ---
 
@@ -54,7 +54,7 @@ The database layer can be replaced without touching business logic. Business log
 
 **How a Request Flows Through This System**
 
-This is not simplified. This is the actual execution path of every request:
+The full execution path of every request, from entry to database:
 
 ```
 Program.cs            → The day planner. Runs once at startup. Sets everything up.
@@ -100,8 +100,7 @@ Database              → The company record. Final destination.
 
 ## Design Decisions and Corrections
 
-These are the decisions made deliberately upfront and the problems identified and corrected during development. The decisions show architectural thinking. The corrections show the ability to evaluate work critically and change course.
-
+These are the decisions made deliberately upfront and the problems identified and corrected during development. The decisions show architectural thinking.
 ---
 
 **Manual Mapping over AutoMapper**
@@ -186,7 +185,7 @@ HHMCore LMS is a post-admission system. Students and teachers are already enroll
 
 ## Production Hardening
 
-Production concerns addressed in the current codebase, beyond making features work:
+Production concerns addressed in the current codebase:
 
 | Concern | Implementation |
 |---|---|
@@ -260,19 +259,17 @@ Enforced in every pull request:
 
 Three things this project changed about how I think:
 
-**Evaluate tools by what they cost, not just what they provide.** AutoMapper solved a real problem. It also created one. Knowing when the cost exceeds the benefit is a skill, not an opinion. The manual mapping decision came from applying that thinking directly.
+**Evaluate tools by what they cost, not just what they provide.** AutoMapper solved a real problem. It also created one. I did not see that trade-off clearly at the start. I only understood it after working with it across enough modules that the debugging cost became obvious. Removing it felt like going backwards, but the codebase was easier to reason about the moment it was gone.
 
-**Architecture decisions compound.** Every wrong entity relationship discovered late costs more to fix than one discovered early. The schedule module's string-based design would have made conflict detection impossible. Getting the entity model right before writing service logic is not caution — it is efficiency.
+**Architecture decisions compound.** The schedule module went through the most redesigns. The string-based design flaw only became visible when conflict detection became a requirement and could not be patched around. This was also where I understood what working with AI actually means — it proposes, you catch what is wrong, and you fix it. Getting the entity model right before writing service logic is not caution — it is just cheaper in the long run.
 
-**The mistakes are where the learning lives.** The bug log in this repository is not a list of failures. It is a record of problems identified, understood, and corrected. Every entry has a root cause and a lesson. That discipline — document what broke and why — is the habit I am most glad this project built.
+**Documenting what broke is worth the time.** Documenting what broke is worth the time. There were bugs I wanted to move past quickly. Writing down the root cause and what changed forced me to actually understand them rather than just fix the symptom.
 
 ---
 
 ## The Story
 
-I am a PharmD student who fell in love with programming.
-
-I restarted with a clear goal in December 2024: build something production-grade, document everything, and understand every decision before making it. I worked with AI throughout this project — not as a code generator, but as a collaborator I directed, questioned, and frequently corrected. The schedule module alone went through multiple redesigns because I kept identifying flaws in what was being proposed. The mass assignment vulnerability, the false-passing unit tests, the AutoMapper trade-off — none of these were handed to me.
+I am a PharmD student building toward health tech. I restarted with a clear goal in December 2024: build something production-grade, document everything, and understand every decision before making it. I worked with AI throughout this project — not as a code generator, but as a collaborator I directed, questioned, and frequently corrected. The schedule module alone went through multiple redesigns because I kept identifying flaws in what was being proposed. The mass assignment vulnerability, the false-passing unit tests, the AutoMapper trade-off — none of these were handed to me.
 
 I also sought feedback from senior engineers, implemented their suggestions, and documented what changed and why. That habit shaped the final architecture in real ways.
 
